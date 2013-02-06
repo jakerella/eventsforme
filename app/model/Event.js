@@ -4,7 +4,7 @@ Ext.define('Events.model.Event', {
   config: {
     idProperty: 'id',
     fields: [
-      {name: 'id', type: 'int'},
+      {name: 'id', type: 'string'},
       {name: 'title', type: 'string'},
       {name: 'description', type: 'string'},
       {name: 'link', type: 'string'},
@@ -23,12 +23,8 @@ Ext.define('Events.model.Event', {
     ],
 
     proxy: {
-      type: 'ajax',
-      url: '/data/event.php',
-      reader: {
-        type: 'json',
-        rootProperty: 'results'
-      }
+      type: "localstorage",
+      id : "my-events"
     }
   }
 });

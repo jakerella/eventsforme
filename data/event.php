@@ -1,19 +1,19 @@
 <?php
 $data = array(
   array(
-    'id' => 1, 
-    'title' => 'Sorta cool, I guess', 
-    'description' => 'Lorem ipsum et tu brute, cut pudelag utip hethen.', 
+    'id' => 'sp-20130806-5678',
+    'title' => 'Sorta cool, I guess',
+    'description' => 'Lorem ipsum et tu brute, cut pudelag utip hethen.',
     'category' => 'Event',
     'link' => 'http://jordankasper.com',
-    'location' => null, 
-    'start' => "2013-08-06 14:50:00", 
+    'location' => null,
+    'start' => "2013-08-06 14:50:00",
     'end' => null,
     'lat' => null,
     'lng' => null
   ),
   array(
-    'id' => 2,
+    'id' => 'mu-20130215-1234',
     'title' => 'Super awesome fun time', 
     'description' => 'Lorem ipsum et tu brute, cut pudelag utip hethen.', 
     'category' => 'Party',
@@ -25,7 +25,7 @@ $data = array(
     'lng' => 90.0489
   ),
   array(
-    'id' => 3, 
+    'id' => 'or-20130716-666',
     'title' => 'Sencha con', 
     'description' => 'Lorem ipsum et tu brute, cut pudelag utip hethen.', 
     'category' => 'Conference',
@@ -37,26 +37,33 @@ $data = array(
     'lng' => null
   ),
   array(
-    'id' => 4,
+    'id' => 'mu-20130208-5309',
     'title' => 'What the what?', 
     'description' => 'Lorem ipsum et tu brute, cut pudelag utip hethen.', 
     'category' => 'Party',
     'link' => 'http://memphis.com',
     'location' => 'Party House',
-    'start' => "2013-02-06 08:00:00", 
-    'end' => "2013-02-07 19:00:00",
+    'start' => "2013-02-08 08:00:00", 
+    'end' => "2013-02-09 19:00:00",
     'lat' => 35.1494,
     'lng' => 90.0489
   )
 );
 
-if (isset($_GET['id']) && isset($data[$_GET['id']-1])) {
+if (isset($_GET['id'])) {
   
   // header("HTTP/1.1 404 I can't do that...");
   // echo "404 I can't do that...";
   // exit;
 
-  $data = array($data[$_GET['id']-1]);
+  $newData = array();
+  foreach ($data as $rec) {
+    if ($rec['id'] == $_GET['id']) {
+      $newData = $rec;
+      break;
+    }
+  }
+  $data = $newData;
 }
 
 

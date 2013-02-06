@@ -11,10 +11,10 @@ Ext.application({
 
   requires: [ 'Ext.MessageBox', 'Ext.navigation.View' ],
 
-  controllers: ['Ext.io.Controller', 'Event', 'Static', 'Error'],
+  controllers: ['Event', 'Static', 'Error'], // 'Ext.io.Controller' removed for now
   views: ['Nav', 'EventList', 'EventView', 'Search', 'ErrorView'],
   models: ['Event'],
-  stores: ['LocalEvents', 'SearchEvents'],
+  stores: ['SearchEvents', 'MyEvents'],
 
   io: {
     appId: "5448ab1f-8729-4eae-917d-ba0eb45f974f",
@@ -56,10 +56,10 @@ Ext.application({
             text: 'Back',
             hidden: true,
             handler: function() {
-              console.log('back button tapped');
               history.back();
             }
-          }
+          },
+          {xtype: 'spacer'}
         ]
       },
       {
@@ -149,6 +149,14 @@ Ext.define("Events.Util", {
     }, 300);
 
     return v;
+  },
+
+  addTitleButton: function(b) {
+    if (!this.screenTitle) {
+      this.screenTitle = Ext.Viewport.getDockedComponent('screen-title');
+    }
+
+    return this.screenTitle.add(b);
   },
 
   setActiveTab: function(t) {

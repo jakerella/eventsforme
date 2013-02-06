@@ -4,6 +4,18 @@
 		"selected_items":
 		[
 			[
+				"m",
+				"minDist"
+			],
+			[
+				"sear",
+				"searchEvents"
+			],
+			[
+				"add",
+				"addFormViews"
+			],
+			[
 				"show",
 				"showLocationInput"
 			],
@@ -140,10 +152,6 @@
 				"triggerEvent"
 			],
 			[
-				"add",
-				"addTriggers"
-			],
-			[
 				"doF",
 				"doFindForm"
 			],
@@ -207,7 +215,7 @@
 			"file": "app.js",
 			"settings":
 			{
-				"buffer_size": 11791,
+				"buffer_size": 11972,
 				"line_ending": "Unix"
 			}
 		},
@@ -215,15 +223,7 @@
 			"file": "app/controller/Event.js",
 			"settings":
 			{
-				"buffer_size": 3024,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "app/view/Search.js",
-			"settings":
-			{
-				"buffer_size": 1271,
+				"buffer_size": 5377,
 				"line_ending": "Unix"
 			}
 		}
@@ -231,9 +231,17 @@
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 264.0,
+		"height": 392.0,
 		"selected_items":
 		[
+			[
+				"git",
+				"Git: Commit"
+			],
+			[
+				"add",
+				"Git: Add..."
+			],
 			[
 				"rena",
 				"File: Rename"
@@ -253,10 +261,6 @@
 			[
 				"disable",
 				"SublimeCodeIntel: Disable Plugin"
-			],
-			[
-				"git",
-				"Git: Push"
 			],
 			[
 				"git: add",
@@ -307,10 +311,6 @@
 				"Git: Commit"
 			],
 			[
-				"add",
-				"Git: Add..."
-			],
-			[
 				"commi",
 				"Git: Commit"
 			],
@@ -351,7 +351,7 @@
 				"Tasks: New document"
 			]
 		],
-		"width": 449.0
+		"width": 467.0
 	},
 	"console":
 	{
@@ -368,13 +368,15 @@
 	},
 	"file_history":
 	[
+		"/var/www/events/app/view/Search.js",
+		"/var/www/events/app/store/SearchEvents.js",
+		"/var/www/events/.sencha/app/sencha.cfg",
 		"/var/www/events/app/view/EventView.js",
 		"/var/www/events/app/controller/Static.js",
 		"/var/www/events/app/controller/Error.js",
 		"/var/www/events/data/event.php",
 		"/var/www/events/app/view/ErrorView.js",
 		"/var/www/events/app/view/EventList.js",
-		"/var/www/events/app/view/Search.js",
 		"/var/www/events/resources/css/app.css",
 		"/var/www/events/app/view/Nav.js",
 		"/var/www/events/app/store/LocalEvents.js",
@@ -405,7 +407,6 @@
 		"/var/www/events/data/user.php",
 		"/var/www/events/app/store/MyEvents.js",
 		"/var/www/events/app/view/Mine.js",
-		"/var/www/events/app/store/SearchEvents.js",
 		"/var/www/events/app/model/User.js",
 		"/var/www/events/api/event.php",
 		"/var/www/events/app.js",
@@ -494,8 +495,7 @@
 		"/var/www/atlas/db/migrate/20130113210955_create_payments.rb",
 		"/var/www/atlas/app/models/user_service.rb",
 		"/var/www/atlas/test/functional/about_controller_test.rb",
-		"/var/www/atlas/atlas.sublime-project",
-		"/var/www/atlas/test/functional/locations_controller_test.rb"
+		"/var/www/atlas/atlas.sublime-project"
 	],
 	"find":
 	{
@@ -514,6 +514,10 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"redirect",
+			"mindist",
+			"minDist",
+			"loader",
 			"console.debug",
 			"debug",
 			"eventView",
@@ -629,7 +633,7 @@
 	"groups":
 	[
 		{
-			"selected": 2,
+			"selected": 1,
 			"sheets":
 			[
 				{
@@ -637,15 +641,15 @@
 					"file": "app.js",
 					"settings":
 					{
-						"buffer_size": 11791,
+						"buffer_size": 11972,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2559,
-								2559
+								400,
+								400
 							]
 						],
 						"settings":
@@ -741,7 +745,7 @@
 							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
 						},
 						"translation.x": 0.0,
-						"translation.y": 1305.0,
+						"translation.y": 1125.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -751,15 +755,15 @@
 					"file": "app/controller/Event.js",
 					"settings":
 					{
-						"buffer_size": 3024,
+						"buffer_size": 5377,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2176,
-								2176
+								2817,
+								2817
 							]
 						],
 						"settings":
@@ -855,121 +859,7 @@
 							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
 						},
 						"translation.x": 0.0,
-						"translation.y": 315.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "app/view/Search.js",
-					"settings":
-					{
-						"buffer_size": 1271,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								899,
-								899
-							]
-						],
-						"settings":
-						{
-							"annotations":
-							[
-								"TODO",
-								"README",
-								"FIXME"
-							],
-							"csslint_options":
-							{
-								"adjoining-classes": "warning",
-								"box-model": true,
-								"box-sizing": "warning",
-								"compatible-vendor-prefixes": "warning",
-								"display-property-grouping": true,
-								"duplicate-background-images": "warning",
-								"duplicate-properties": true,
-								"empty-rules": true,
-								"errors": true,
-								"fallback-colors": "warning",
-								"floats": "warning",
-								"font-faces": "warning",
-								"font-sizes": "warning",
-								"gradients": "warning",
-								"ids": "warning",
-								"import": "warning",
-								"important": "warning",
-								"known-properties": true,
-								"outline-none": "warning",
-								"overqualified-elements": "warning",
-								"qualified-headings": "warning",
-								"regex-selectors": "warning",
-								"rules-count": "warning",
-								"shorthand": "warning",
-								"star-property-hack": "warning",
-								"text-indent": "warning",
-								"underscore-property-hack": "warning",
-								"unique-headings": "warning",
-								"universal-selector": "warning",
-								"vendor-prefix": true,
-								"zero-units": "warning"
-							},
-							"gjslint_ignore":
-							[
-								110.0
-							],
-							"gjslint_options":
-							[
-							],
-							"javascript_linter": "jshint",
-							"jshint_options":
-							{
-								"browser": true,
-								"evil": true,
-								"regexdash": true,
-								"sub": true,
-								"trailing": true,
-								"wsh": true
-							},
-							"pep8": true,
-							"pep8_ignore":
-							[
-								"E501"
-							],
-							"perl_linter": "perlcritic",
-							"pyflakes_ignore":
-							[
-							],
-							"pyflakes_ignore_import_*": true,
-							"sublimelinter": true,
-							"sublimelinter_delay": 2.0,
-							"sublimelinter_disable":
-							[
-							],
-							"sublimelinter_executable_map":
-							{
-							},
-							"sublimelinter_fill_outlines": false,
-							"sublimelinter_gutter_marks": false,
-							"sublimelinter_mark_style": "outline",
-							"sublimelinter_notes": false,
-							"sublimelinter_objj_check_ascii": false,
-							"sublimelinter_popup_errors_on_save": false,
-							"sublimelinter_syntax_map":
-							{
-								"C++": "c",
-								"Python Django": "python",
-								"Ruby on Rails": "ruby"
-							},
-							"sublimelinter_wrap_find": true,
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 1125.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"

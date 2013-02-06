@@ -52,7 +52,7 @@ Ext.define('Events.controller.Error', {
       title: 'Uh oh...',
       data: {
         'code': code,
-        'msg': msg
+        'detail': msg
       }
     });
   }
