@@ -1,6 +1,6 @@
 Ext.define('Events.view.Search', {
   extend: 'Ext.form.Panel',
-  requires: [ 'Ext.form.FieldSet', 'Ext.field.Search' ],
+  requires: ['Ext.form.FieldSet', 'Ext.field.Search', 'Ext.field.Select'],
   alias: 'widget.eventsearch',
 
   config: {
@@ -10,18 +10,31 @@ Ext.define('Events.view.Search', {
   initialize: function () {
     this.callParent(arguments);
 
-    // TODO: add form elements
-    
-    var q = {
+    var v = this;
+    if (Ext.feature.has('Geolocation')) {
+      Ext.device.Geolocation.getCurrentPosition({
+        success: function(pos) {
+          v.addFormViews(pos.coords.latitude+', '+pos.coords.longitude);
+        },
+        failure: function() { v.addFormViews(''); }
+      });
+    } else {
+      v.addFormViews('');
+    }
+  },
+
+  addFormViews: function(locVal) {
+    var terms = {
       xtype: 'searchfield',
-      name: 'q',
+      name: 'terms',
       placeHolder: 'Keywords'
     };
 
     var loc = {
       xtype: 'searchfield',
       name: 'loc',
-      placeHolder: 'Location'
+      placeHolder: 'Location',
+      value: locVal
     };
     
     var dist = {
@@ -39,20 +52,21 @@ Ext.define('Events.view.Search', {
       ]
     };
 
+    var v = this;
     var go = {
       xtype: 'button',
       ui: 'action',
       text: 'Search',
       handler: function() {
-        console.log('searching events', this.parent.parent.getValues());
-        this.fireEvent('searchEvents', this.parent.parent.getValues());
+        console.log('firing searchEvents event');
+        v.fireEvent('searchEvents', this.parent.parent.getValues());
       }
     };
 
     this.add({
       xtype: 'fieldset',
       id: 'search-fields',
-      items: [q, loc, dist, go]
+      items: [terms, loc, dist, go]
     });
   }
   

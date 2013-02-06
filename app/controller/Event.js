@@ -1,6 +1,6 @@
 Ext.define('Events.controller.Event', {
   extend: 'Ext.app.Controller',
-  requires: ['Events.model.Event', 'Ext.device.Geolocation'],
+  requires: ['Events.model.Event', 'Ext.device.Geolocation', 'Ext.io.User'],
 
   config: {
     routes: {
@@ -16,6 +16,15 @@ Ext.define('Events.controller.Event', {
 
       // event search
       'search': 'showSearchForm',
+      'search-results/:terms/:loc/:dist/:ts': {
+        action: 'searchResults',
+        conditions: {
+          ':terms': "[^/]+",
+          ':loc': "[^/]+",
+          ':dist': "[0-9]+",
+          ':ts': "[0-9]+"
+        }
+      },
 
       // event detail
       'view/:eid': {
@@ -23,7 +32,10 @@ Ext.define('Events.controller.Event', {
         conditions: {
           ':eid': "[0-9]+"
         }
-      }
+      },
+
+      // user stored events
+      'my-events': 'showMyEvents'
     }
   },
 
@@ -71,7 +83,7 @@ Ext.define('Events.controller.Event', {
       });
     } else {
       Events.app.redirectTo('search');
-    }    
+    }
   },
 
   showSearchForm: function() {
@@ -79,20 +91,60 @@ Ext.define('Events.controller.Event', {
 
     Events.Util.setActiveTab('search');
 
-    Events.Util.addView({
+    var v = Events.Util.addView({
       xtype: 'eventsearch',
       id: 'search-form',
       hash: 'search',
       title: 'Search for Events',
+      listeners: {
+        'searchEvents': this.doSearch,
+        scope: this
+      }
     });
+  },
 
-    // TODO: add search handler
+  doSearch: function(values) {
+    console.log('searching events', values);
+
+    values = (values)?values:{};
+    values.terms = (values.terms)?values.terms:null;
+    values.loc = (values.loc)?values.loc:null;
+    values.dist = (values.dist)?values.dist:Events.defDist;
+
+    values.terms = values.terms.replace(/[^a-zA-Z0-9\-\,\.\!\(\)\@\$\?\:\'\" ]/g, '');
+    values.loc = values.loc.replace(/[^a-zA-Z0-9\-\,\'\. ]/g, '');
+    values.dist = values.dist.replace(/[^0-9]/g, '');
+
+    if (!values.terms || !values.terms.length || !values.loc || !values.loc.length) {
+      Ext.Msg.alert("", "Please enter some keywords and a location to search in!");
+      return;
+    }
+
+    Events.app.redirectTo('search-results/'+values.terms+'/'+values.loc+'/'+values.dist+'/'+(new Date()).getTime());
+  },
+
+  searchResults: function(terms, loc, dist, ts) {
+    Events.Util.setActiveTab('search');
     
+    Events.Util.addView({
+      xtype: 'eventlist',
+      id: 'search-results-'+ts,
+      title: 'Event Search Results',
+      hash: 'search-results/'+terms+'/'+loc+'/'+dist,
+      store: Ext.getStore("SearchEvents").load({
+        'params': {
+          'terms': terms,
+          'loc': loc,
+          'dist': dist
+        },
+        failure: function(r, op) { Events.Util.loadError(op, 'search'); }
+      })
+    });
   },
 
   showLocalEvents: function(pos, dist) {
-    dist = Ext.Number.from(dist, Events.app.minDist);
-    dist = (dist > 0)?dist:Events.app.minDist;
+    dist = Ext.Number.from(dist, Events.app.defDist);
+    dist = (dist > 0)?dist:Events.app.defDist;
 
     console.log('showing local events', pos, dist);
 
@@ -118,6 +170,36 @@ Ext.define('Events.controller.Event', {
         'params': params,
         failure: function(r, op) { Events.Util.loadError(op, 'local'+((dist)?'/'+dist:'')); }
       })
+    });
+  },
+
+  showMyEvents: function() {
+    var c = this;
+    c.onAuth(null, {});
+    // They'll need an account now...
+    // Ext.io.User.getCurrent(function(user) {
+    //   if (user) {
+    //     // Already logged in
+    //     c.onAuth(user, {});
+
+    //   } else {
+    //     // Need to log in or register
+    //     c.getApplication().sio.on({
+    //       authorized: {fn: c.onAuth, scope: c}
+    //     });
+    //     c.getApplication().sio.login();
+    //   }
+
+    // });
+  },
+
+  onAuth: function(user) {
+    Events.Util.addView({
+      xtype: 'panel',
+      id: 'my-events',
+      hash: 'my-events',
+      title: 'My Events',
+      html: "<p>These are yours!</p>"
     });
   }
 

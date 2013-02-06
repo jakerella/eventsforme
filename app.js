@@ -1,7 +1,8 @@
 //<debug>
 Ext.Loader.setPath({
   'Ext': 'touch/src',
-  'Events': 'app'
+  'Events': 'app',
+  'Ext.io': 'io/src/io'
 });
 //</debug>
 
@@ -10,10 +11,16 @@ Ext.application({
 
   requires: [ 'Ext.MessageBox', 'Ext.navigation.View' ],
 
-  controllers: ['Event', 'Static', 'Error'],
+  controllers: ['Ext.io.Controller', 'Event', 'Static', 'Error'],
   views: ['Nav', 'EventList', 'EventView', 'Search', 'ErrorView'],
   models: ['Event'],
-  stores: ['LocalEvents'],
+  stores: ['LocalEvents', 'SearchEvents'],
+
+  io: {
+    appId: "5448ab1f-8729-4eae-917d-ba0eb45f974f",
+    authOnStartup: true,
+    manualLogin: true
+  },
 
   icon: {
     '57': 'resources/icons/Icon.png',
@@ -40,7 +47,7 @@ Ext.application({
         xtype: 'toolbar',
         title: 'Find Some Events',
         id: 'screen-title',
-        docked: "top",
+        docked: 'top',
         items: [
           {
             xtype: 'button',
@@ -66,7 +73,7 @@ Ext.application({
 
   onUpdated: function() {
     Ext.Msg.confirm(
-      "Application Update",
+      'Application Update',
       "This application has just successfully been updated to the latest version. Reload now?",
       function(buttonId) {
         if (buttonId === 'yes') {
@@ -82,7 +89,7 @@ Ext.application({
 
   // Application constants
   baseUrl: Ext.namespace().location.protocol+'//'+Ext.namespace().location.host,
-  minDist: 20
+  defDist: 20
 
 });
 
@@ -116,8 +123,9 @@ Ext.define("Events.Util", {
     if (!this.screenTitle) {
       this.screenTitle = Ext.Viewport.getDockedComponent('screen-title');
     }
-    if (v.getTitle && v.getTitle().length) {
-      this.screenTitle.setTitle(v.getTitle());
+    
+    if (v.title && v.title.length) {
+      this.screenTitle.setTitle(v.title);
     }
 
     // Set the view as active (if it's not already)
@@ -139,6 +147,8 @@ Ext.define("Events.Util", {
       var firstAction = (Events.app.getHistory().getActions()[0].getUrl() == Events.app.getHistory().getToken());
       u.backBtn.setHidden(firstAction);
     }, 300);
+
+    return v;
   },
 
   setActiveTab: function(t) {
