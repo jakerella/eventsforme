@@ -15,5 +15,8 @@ Ext.define('Events.view.EventView', {
       "</div>"
     )
   }
+
+  // TODO: fix up this template (account for other stuff, prettify it)
+  //       make external link small icon
   
 });

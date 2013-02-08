@@ -1,4 +1,4 @@
-Ext.define('Events.view.Nav', {
+Ext.define('Events.view.EventNav', {
   extend: 'Ext.tab.Bar',
   alias: 'widget.eventsnav',
 

@@ -6,13 +6,15 @@ Ext.define('Events.model.Event', {
     fields: [
       {name: 'id', type: 'string'},
       {name: 'title', type: 'string'},
+      {name: 'category', type: 'string'},
       {name: 'description', type: 'string'},
       {name: 'link', type: 'string'},
       {name: 'location', type: 'string'},
       {name: 'start', type: 'date', dateFormat: 'Y-m-d H:i:s'},
       {name: 'end', type: 'date', dateFormat: 'Y-m-d H:i:s'},
       {name: 'lat', type: 'float'},
-      {name: 'lng', type: 'float'}
+      {name: 'lng', type: 'float'},
+      {name: 'saved', type: 'boolean'}
     ],
 
     validations: [

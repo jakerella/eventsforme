@@ -36,6 +36,9 @@
      */
     "js": [
         {
+            "path": "http://maps.google.com/maps/api/js?sensor=true"
+        },
+        {
             "path": "touch/sencha-touch.js"
         },
         {

@@ -1,4 +1,4 @@
-Ext.define('Events.view.Search', {
+Ext.define('Events.view.EventSearch', {
   extend: 'Ext.form.Panel',
   requires: ['Ext.form.FieldSet', 'Ext.field.Search', 'Ext.field.Select'],
   alias: 'widget.eventsearch',
@@ -14,7 +14,10 @@ Ext.define('Events.view.Search', {
     if (Ext.feature.has('Geolocation')) {
       Ext.device.Geolocation.getCurrentPosition({
         success: function(pos) {
-          v.addFormViews(pos.coords.latitude+', '+pos.coords.longitude);
+
+          // TODO: get "City, State" instead
+
+          v.addFormViews(pos.coords.latitude.toFixed(4)+', '+pos.coords.longitude.toFixed(4));
         },
         failure: function() { v.addFormViews(''); }
       });

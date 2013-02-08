@@ -4,11 +4,11 @@ Ext.define('Events.view.EventList', {
 
   config: {
     loadingText: "Finding events...",
-    emptyText: "<p class='noEvents'>No events were found in your area any time soon. How sad.</p>",
+    emptyText: "<p class='noEvents'>I couldn't find any events! How sad.</p>",
 
     itemTpl: new Ext.XTemplate(
       "<div class='eventListing'>",
-        "<h3>{title}</h3>",
+        "<h3>{title}{[this.saveText(values.saved)]}</h3>",
         "<tpl if='location'>",
           "<p class='eventLocation'>{[Events.Util.escapeHtmlEntities(values.location)]}</p>",
         "</tpl>",
@@ -18,7 +18,16 @@ Ext.define('Events.view.EventList', {
       "</div>",
       "<a href='#view/{id}'>",
         "<div class='x-unsized x-list-disclosure x-dock-item x-docked-right' id='ext-component-8'></div>",
-      "</a>"
+      "</a>",
+      {
+        saveText: function(saved) {
+          if (saved === true) {
+            return " <span class='saved'>saved</span>";
+          } else {
+            return '';
+          }
+        }
+      }
     )
   }
   

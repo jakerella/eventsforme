@@ -31,6 +31,11 @@
   padding-right:25px;
   line-height:150%;
 }
+.eventListing h3 .saved {
+  font-size: 0.8em;
+  color: #2c2;
+}
+#my-events .eventListing .saved { display: none; }
 .eventLocation {
   float:left;
   width:95%;

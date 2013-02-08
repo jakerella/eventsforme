@@ -12,7 +12,7 @@ Ext.application({
   requires: [ 'Ext.MessageBox', 'Ext.navigation.View' ],
 
   controllers: ['Event', 'Static', 'Error'], // 'Ext.io.Controller' removed for now
-  views: ['Nav', 'EventList', 'EventView', 'Search', 'ErrorView'],
+  views: ['EventNav', 'EventList', 'EventView', 'EventSearch', 'EventMap', 'ErrorView'],
   models: ['Event'],
   stores: ['SearchEvents', 'MyEvents'],
 
@@ -59,7 +59,32 @@ Ext.application({
               history.back();
             }
           },
-          {xtype: 'spacer'}
+          {xtype: 'spacer'},
+          {
+            xtype: 'button',
+            id: 'save-event',
+            ui: 'confirm',
+            text: 'Save',
+            hidden: true,
+            handler: this.fireSaveEvent
+          },
+          {
+            xtype: 'button',
+            id: 'remove-event',
+            ui: 'decline',
+            text: 'Remove',
+            hidden: true,
+            handler: this.fireRemoveEvent
+          },
+          {
+            xtype: 'button',
+            id: 'map-events',
+            iconCls: 'maps',
+            iconMask: true,
+            hidden: true,
+            tooltip: 'Show these on a map',
+            handler: this.fireShowMap
+          }
         ]
       },
       {
@@ -84,10 +109,50 @@ Ext.application({
   },
 
 
-  // TODO: make browser nav go through active items versus adding new items
+  // ------------------ Application helpers ----------------- //
+  
+  fireSaveEvent: function() {
+    var e;
+    var v = Ext.Viewport.getActiveItem();
+    if (v instanceof Events.view.EventView) {
+      e = v.getRecord();
+    }
+    if (e) {
+      this.fireEvent("saveEvent", e);
+    } else {
+      Events.app.getController('Error').showOtherError(401, "Sorry, but I wasn't able to find that event. Can you try again?");
+    }
+  },
+
+  fireRemoveEvent: function() {
+    var e;
+    var v = Ext.Viewport.getActiveItem();
+    if (v instanceof Events.view.EventView) {
+      e = v.getRecord();
+    }
+    if (e) {
+      this.fireEvent("removeEvent", e);
+    } else {
+      Events.app.getController('Error').showOtherError(401, "Sorry, but I wasn't able to find that event. Can you try again?");
+    }
+  },
+
+  fireShowMap: function() {
+    var s;
+    var v = Ext.Viewport.getActiveItem();
+    if (v instanceof Events.view.EventList) {
+      var s = v.getStore();
+    }
+    if (s) {
+      this.fireEvent("showMap", s);
+    } else {
+      Events.app.getController('Error').showOtherError(401, "Sorry, but I wasn't able to load the events. Can you try again?");
+    }
+  },
 
 
-  // Application constants
+  // ------------------ Application Constants ----------------- //
+  
   baseUrl: Ext.namespace().location.protocol+'//'+Ext.namespace().location.host,
   defDist: 20
 
@@ -103,8 +168,11 @@ Ext.define("Events.Util", {
     tomorrow: null,
     week: null,
     sevenDays: null,
-    screenTitle: null,
     navBar: null,
+    screenTitle: null,
+    saveButton: null,
+    removeButton: null,
+    mapButton: null,
     backBtn: null
   },
 
@@ -119,14 +187,13 @@ Ext.define("Events.Util", {
       console.log('new view added', v);
     }
 
-    // init screenTitle (if not defined yet) and set it from view
-    if (!this.screenTitle) {
-      this.screenTitle = Ext.Viewport.getDockedComponent('screen-title');
-    }
-    
     if (v.title && v.title.length) {
-      this.screenTitle.setTitle(v.title);
+      this.getScreenTitle().setTitle(v.title);
     }
+    // Hide titlebar buttons by default
+    Events.Util.getSaveButton().setHidden(true);
+    Events.Util.getRemoveButton().setHidden(true);
+    Events.Util.getMapButton().setHidden(true);
 
     // Set the view as active (if it's not already)
     if (Ext.Viewport.getActiveItem() != v) {
@@ -139,41 +206,72 @@ Ext.define("Events.Util", {
 
     var u = this;
     setTimeout(function() {
-      // init backBtn if not set yet
-      if (!u.backBtn) {
-        u.backBtn = u.screenTitle.getComponent('nav-back');
-      }
       // show/hide back button based on History object
       var firstAction = (Events.app.getHistory().getActions()[0].getUrl() == Events.app.getHistory().getToken());
-      u.backBtn.setHidden(firstAction);
+      u.getBackButton().setHidden(firstAction);
     }, 300);
 
     return v;
   },
 
-  addTitleButton: function(b) {
+
+  // Getters/Setters for static components
+  
+  getScreenTitle: function() {
     if (!this.screenTitle) {
       this.screenTitle = Ext.Viewport.getDockedComponent('screen-title');
     }
-
-    return this.screenTitle.add(b);
+    return this.screenTitle;
   },
 
-  setActiveTab: function(t) {
+  getSaveButton: function() {
+    if (!this.saveButton) {
+      this.saveButton = this.getScreenTitle().getComponent('save-event');
+    }
+    return this.saveButton;
+  },
+
+  getRemoveButton: function() {
+    if (!this.removeButton) {
+      this.removeButton = this.getScreenTitle().getComponent('remove-event');
+    }
+    return this.removeButton;
+  },
+
+  getMapButton: function() {
+    if (!this.mapButton) {
+      this.mapButton = this.getScreenTitle().getComponent('map-events');
+    }
+    return this.mapButton;
+  },
+
+  getNavBar: function() {
     if (!this.navBar) {
       this.navBar = Ext.Viewport.getDockedComponent('app-nav');
     }
+    return this.navBar;
+  },
+
+  getBackButton: function() {
+    if (!this.backBtn) {
+      this.backBtn = this.getScreenTitle().getComponent('nav-back');
+    }
+    return this.backBtn;
+  },
+
+  setActiveTab: function(t) {
     if (t && t.length) {
-      this.navBar.setActiveTab('nav-'+t);
-      this.navBar.getActiveTab().setActive(true); // just to be sure it's marked properly
+      this.getNavBar().setActiveTab('nav-'+t);
+      this.getNavBar().getActiveTab().setActive(true); // just to be sure it's marked properly
     } else {
-      var at = this.navBar.getActiveTab();
+      var at = this.getNavBar().getActiveTab();
       if (at) { at.setActive(false); }
     }
   },
 
 
-  // ASYNC HANDLING
+  // Async handling
+  
   loadError: function(op, hash) {
     if (op.error && op.error.status) {
       if (op.error.status > 499) {
@@ -189,7 +287,8 @@ Ext.define("Events.Util", {
   },
 
 
-  // DATE FUNCTIONS
+  // Date functions
+  
   getDateTimeRange: function(start, end) {
     if (!start) { return ""; }
     
@@ -258,7 +357,8 @@ Ext.define("Events.Util", {
   },
 
 
-  // TEXT HANDLING
+  // Text handling
+  
   escapeHtmlEntities: function (text) {
     var u = this;
     return text.replace(/[\u00A0-\u2666<>\&]/g, function(c) {
