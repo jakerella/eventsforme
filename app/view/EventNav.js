@@ -30,6 +30,7 @@ Ext.define('Events.view.EventNav', {
         url: 'about'
       }
     ],
+
     control: {
       'button': {
         tap: function(tab) {
@@ -37,6 +38,35 @@ Ext.define('Events.view.EventNav', {
           Events.app.redirectTo(tab.url);
         }
       }
+    }
+  },
+
+  initialize: function() {
+    var v = this;
+
+    Events.app.on('eventSaved', function(e) {
+      v.changeMyEventsBadge(1);
+    });
+    Events.app.on('eventRemoved', function(e) {
+      v.changeMyEventsBadge(-1);
+    });
+
+    var mine = Ext.getStore('MyEvents');
+    if (mine.isLoaded) {
+      v.changeMyEventsBadge(mine.getAllCount());
+    }
+    mine.on('load', function() {
+      v.changeMyEventsBadge(mine.getAllCount());
+    });
+  },
+
+  changeMyEventsBadge: function(change) {
+    var b = this.getComponent('nav-my-events');
+    if (b) {
+      change = Ext.Number.from(change, 0);
+      var cnt = b.getBadgeText();
+      cnt = (Ext.Number.from(cnt, 0))?Ext.Number.from(cnt, 0):0;
+      b.setBadgeText(Math.max(0, (cnt + change)));
     }
   }
 

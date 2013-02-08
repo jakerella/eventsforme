@@ -5,14 +5,15 @@ Ext.define('Events.view.EventView', {
   config: {
     layout: { type: 'card' },
 
-    // TODO: fix up this template (account for other stuff, prettify it)
-    //       make external link small icon
     tpl: new Ext.XTemplate(
       "<div class='eventView'>",
-        "<h3><a href='{link}'>{title}</a></h3>",
-        "<p class='eventTimes'>{[Events.Util.getDateTimeRange(values.start, values.end)]}</p>",
+        "<h3>{title} <a href='{link}' class='eventLink x-button-icon action x-icon-mask' id='eventLink-{id}' target='_blank'></a></h3>",
+        "<p class='eventTimes subtitle'>{[Events.Util.getDateTimeRange(values.start, values.end)]}</p>",
         "<tpl if='location'>",
-          "<p class='eventLocation'>Location: {[Events.Util.escapeHtmlEntities(values.location)]}</p>",
+          "<p class='eventLocation subtitle'>Location: {[Events.Util.escapeHtmlEntities(values.location)]}</p>",
+        "</tpl>",
+        "<tpl if='category'>",
+          "<p class='eventCategory subtitle'>Category: {category}</p>",
         "</tpl>",
         "<p class='eventDescription'>{[Events.Util.escapeHtmlEntities(values.description)]}</p>",
       "</div>"

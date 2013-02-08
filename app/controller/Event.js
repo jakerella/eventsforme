@@ -3,6 +3,8 @@ Ext.define('Events.controller.Event', {
   requires: ['Events.model.Event', 'Ext.device.Geolocation', 'Ext.io.User'],
 
   config: {
+    id: 'eventcontroller',
+
     routes: {
       // local events
       'local': 'initLocalEvents',
@@ -157,6 +159,8 @@ Ext.define('Events.controller.Event', {
             mine.add(e);
             mine.sync();
           }
+
+          Events.app.fireEvent("eventSaved", e);
         },
         failure: function(r, op) {
           console.warn(op);
@@ -186,6 +190,8 @@ Ext.define('Events.controller.Event', {
                 mine.remove(e);
                 mine.sync();
               }
+
+              Events.app.fireEvent("eventRemoved", e);
             },
             failure: function(r, op) {
               console.warn(op);
