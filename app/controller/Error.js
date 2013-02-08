@@ -6,13 +6,19 @@ Ext.define('Events.controller.Error', {
       ':foobar': {
         action: 'showNotFound',
         conditions: {
-          ':foobar': ".+"
+          ':foobar': ".*"
         }
       }
     }
   },
 
   showNotFound: function(hash) {
+    if (Events.app.routeAliases[hash]) {
+      console.log("Redirecting alias '"+hash+"' -> '"+Events.app.routeAliases[hash]+"'");
+      Events.app.redirectTo(Events.app.routeAliases[hash]);
+      return;
+    }
+
     console.warn("Uh oh, didn't find that route", hash);
 
     Events.Util.setActiveTab(null);
@@ -20,6 +26,7 @@ Ext.define('Events.controller.Error', {
     Events.Util.addView({
       xtype: "errorview",
       title: 'Uh oh...',
+      hash: 'error',
       data: {
         'code': 404,
         'hash': hash
@@ -35,6 +42,7 @@ Ext.define('Events.controller.Error', {
     Events.Util.addView({
       xtype: "errorview",
       title: 'Uh oh...',
+      hash: 'error',
       data: {
         'code': code,
         'msg': msg
@@ -50,6 +58,7 @@ Ext.define('Events.controller.Error', {
     Events.Util.addView({
       xtype: "errorview",
       title: 'Uh oh...',
+      hash: 'error',
       data: {
         'code': code,
         'detail': msg

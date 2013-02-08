@@ -28,7 +28,16 @@ Ext.define('Events.view.EventList', {
           }
         }
       }
-    )
+    ),
+
+    listeners: {
+      itemswipe: function(list, i, t, r, e) {
+        console.log(list);
+        if (e.direction == 'left') {
+          Events.app.redirectTo('view/'+r.get('id'));
+        }
+      }
+    }
   }
   
 });

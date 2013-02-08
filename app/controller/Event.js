@@ -5,14 +5,7 @@ Ext.define('Events.controller.Event', {
   config: {
     routes: {
       // local events
-      '': 'initLocalEvents',
       'local': 'initLocalEvents',
-      'local/:dist': {
-        action: 'initLocalEvents',
-        conditions: {
-          ':dist': "[0-9]+"
-        }
-      },
 
       // event search
       'search': 'showSearchForm',
@@ -311,10 +304,10 @@ Ext.define('Events.controller.Event', {
       xtype: 'eventlist',
       id: 'local-events',
       title: 'Events Near You',
-      hash: 'local'+((dist)?'/'+dist:''),
+      hash: 'local',
       store: s.load({
         'params': params,
-        callback: function(r, op, s) { if (!s) { Events.Util.loadError(op, 'local'+((dist)?'/'+dist:'')); } }
+        callback: function(r, op, s) { if (!s) { Events.Util.loadError(op, 'local'); } }
       })
     });
 
@@ -322,6 +315,8 @@ Ext.define('Events.controller.Event', {
   },
 
   showMyEvents: function() {
+    Events.Util.setActiveTab('my-events');
+
     Events.Util.addView({
       xtype: 'eventlist',
       id: 'my-events',
@@ -338,7 +333,7 @@ Ext.define('Events.controller.Event', {
   handleShowMapClick: function(store) {
     var sp = Ext.merge({'terms': '', 'loc': '', 'dist': Events.app.defDist}, store.searchParams);
 
-    Events.app.redirectTo('show-map/'+store.getStoreId()+'/'+sp.terms+'|'+sp.loc+'|'+sp.dist);
+    Events.app.redirectTo(this.getMapHash(store, sp));
   },
 
   showEventMap: function(sId, params) {
@@ -375,7 +370,7 @@ Ext.define('Events.controller.Event', {
             if (s) {
               c.doShowMap(store);
             } else {
-              Events.Util.loadError(op, 'show-map/'+store.getStoreId());
+              Events.Util.loadError(op, this.getMapHash(store, params));
             }
           }
         });
@@ -386,13 +381,26 @@ Ext.define('Events.controller.Event', {
   },
 
   doShowMap: function(s) {
+    if (s.getStoreId() == 'MyEvents') {
+      Events.Util.setActiveTab('my-events');
+    } else if (s.searchParams && s.searchParams.terms && s.searchParams.terms.length) {
+      Events.Util.setActiveTab('search');
+    } else {
+      Events.Util.setActiveTab('local');
+    }
+
     Events.Util.addView({
       xtype: 'eventmap',
       id: 'event-map',
-      hash: 'show-map/'+s.getStoreId(),
+      hash: this.getMapHash(s, s.searchParams),
       title: 'Event Map',
       store: s
     });
+  },
+
+  getMapHash: function(s, p) {
+    p = Ext.merge({'terms': '', 'loc': '', 'dist': Events.app.defDist}, p);
+    return 'show-map/'+s.getStoreId()+'/'+p.terms+'|'+p.loc+'|'+p.dist;
   }
 
 });

@@ -4,6 +4,9 @@ Ext.define('Events.view.EventView', {
 
   config: {
     layout: { type: 'card' },
+
+    // TODO: fix up this template (account for other stuff, prettify it)
+    //       make external link small icon
     tpl: new Ext.XTemplate(
       "<div class='eventView'>",
         "<h3><a href='{link}'>{title}</a></h3>",
@@ -13,10 +16,18 @@ Ext.define('Events.view.EventView', {
         "</tpl>",
         "<p class='eventDescription'>{[Events.Util.escapeHtmlEntities(values.description)]}</p>",
       "</div>"
-    )
-  }
+    ),
 
-  // TODO: fix up this template (account for other stuff, prettify it)
-  //       make external link small icon
+    listeners: {
+      swipe: {
+        fn: function(evt, el){
+          if (evt.direction == 'right' && !Events.Util.getBackButton().getHidden()) {
+            history.back();
+          }
+        },
+        element: 'element'
+      }
+    }
+  }
   
 });

@@ -154,7 +154,12 @@ Ext.application({
   // ------------------ Application Constants ----------------- //
   
   baseUrl: Ext.namespace().location.protocol+'//'+Ext.namespace().location.host,
-  defDist: 20
+  defDist: 20,
+  routeAliases: {
+    '': 'local',
+    'mine': 'my-events',
+    'map': 'show-map/MyEvents'
+  }
 
 });
 
@@ -196,12 +201,28 @@ Ext.define("Events.Util", {
     Events.Util.getMapButton().setHidden(true);
 
     // Set the view as active (if it's not already)
-    if (Ext.Viewport.getActiveItem() != v) {
-      // Finally show our view
+    var curr = Ext.Viewport.getActiveItem();
+    if (curr != v) {
+      // Show our new view
       
-      // TODO: detect if this is a forward, back or new view and change direction accordingly
-      
-      Ext.Viewport.animateActiveItem(v, {type: 'slide', direction: 'left'});
+      // detect if this is a forward, back or new view and change direction accordingly
+      var dir = 'left';
+      if (v.hash) {
+        var ni = 999;
+        var oi = 0;
+        Ext.each(Events.app.getHistory().getActions(), function(a, i) {
+          console.log('checking "'+a.getUrl()+'" against old & new:', curr.hash, v.hash);
+          if (a.getUrl() == v.hash || Events.app.routeAliases[a.getUrl()] == v.hash) {
+            ni = i;
+          } else  if (curr.hash && (a.getUrl() == curr.hash || Events.app.routeAliases[a.getUrl()] == curr.hash)) {
+            oi = i;
+          }
+        });
+        console.log('which way?', oi, ni, curr.hash, v.hash);
+        dir = (ni > oi)?'left':'right';
+      }
+
+      Ext.Viewport.animateActiveItem(v, {type: 'slide', direction: dir});
     }
 
     var u = this;
@@ -209,7 +230,7 @@ Ext.define("Events.Util", {
       // show/hide back button based on History object
       var firstAction = (Events.app.getHistory().getActions()[0].getUrl() == Events.app.getHistory().getToken());
       u.getBackButton().setHidden(firstAction);
-    }, 300);
+    }, 200);
 
     return v;
   },

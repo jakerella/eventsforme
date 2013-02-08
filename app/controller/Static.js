@@ -18,6 +18,7 @@ Ext.define('Events.controller.Static', {
       xtype: 'panel',
       id: 'about-view',
       title: 'About the App',
+      hash: 'about',
       html: 
         "<p>Coming soon!</p>"
     });
