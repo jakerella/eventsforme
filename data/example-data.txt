@@ -1,0 +1,67 @@
+A list of example data returned from various sources
+
+MEETUP.COM
+
+{
+  "results": [
+    {
+      "rsvp_limit": 10,
+      "status": "upcoming",
+      "visibility": "public",
+      "maybe_rsvp_count": 0,
+      "venue": {
+        "id": 11056242,
+        "zip": "37208",
+        "lon": -86.79261,
+        "repinned": false,
+        "name": "Rolf and Daughters",
+        "state": "TN",
+        "address_1": "700 Taylor St",
+        "lat": 36.177437,
+        "city": "Nashville",
+        "country": "us"
+      },
+      "id": "98671662",
+      "utc_offset": -21600000,
+      "distance": 1.4671881198883057,
+      "time": 1360367100000,
+      "duration": 3600000,
+      "waitlist_count": 12,
+      "updated": 1359944996000,
+      "yes_rsvp_count": 10,
+      "created": 1357700791000,
+      "event_url": "http://www.meetup.com/NESNashville/events/98671662/",
+      "description": "<p>Rolf and Daughters in Germantown has a global menu with plenty of southern offerings!!</p><p>Screen it at: <a href=\"http://rolfanddaughters.com\" class=\"linkified\">http://rolfanddaughters.com</a></p><p>Special thank you to <span style=\"text-decoration : underline\"><strong>Zolia</strong></span> for this suggestion!!</p><p> </p>",
+      "how_to_find_us": "Come on in!!!",
+      "name": "Feb. Friday-8th at Rolf and Daughters",
+      "headcount": 0,
+      "group": {
+        "id": 3321682,
+        "group_lat": 36.16999816894531,
+        "name": "Never Eat Solo! Official: Eating with Friends in Nashville",
+        "group_lon": -86.77999877929688,
+        "join_mode": "open",
+        "urlname": "NESNashville",
+        "who": "Food Connoisseurs"
+      }
+    },
+    ...
+  ],
+  "meta": {
+    "lon": -86.774375,
+    "count": 50,
+    "signed_url": "http://api.meetup.com/2/open_events?status=upcoming&_=1360360786715&radius=25.0&and_text=False&limited_events=False&desc=False&offset=0&callback=jQuery17104783838011790067_1360360673541&format=json&lat=36.162184&page=50&lon=-86.774375&sig_id=10483030&sig=6c77536da58a07b8b3f6278ae78f2799d17552c9",
+    "link": "https://api.meetup.com/2/open_events",
+    "next": "https://api.meetup.com/2/open_events?key=784c1c303d407a4f674272f2ee2e24&status=upcoming&_=1360360786715&radius=25.0&and_text=False&limited_events=False&format=json&lat=36.162184&page=50&desc=False&callback=jQuery17104783838011790067_1360360673541&offset=1&sign=true&lon=-86.774375",
+    "total_count": 427,
+    "url": "https://api.meetup.com/2/open_events?key=784c1c303d407a4f674272f2ee2e24&status=upcoming&_=1360360786715&radius=25.0&and_text=False&limited_events=False&format=json&lat=36.162184&page=50&desc=False&callback=jQuery17104783838011790067_1360360673541&offset=0&sign=true&lon=-86.774375",
+    "id": "",
+    "title": "Meetup Open Events v2",
+    "updated": 1360360786761,
+    "description": "Searches for recent and upcoming public events hosted by Meetup groups. Its search window  is the past one month through the next three months, and is subject to change. Open Events is optimized to search for current events by location, category, topic, or text, and only lists meetups that have **3 or more RSVPS**. The number or results returned with each request is not guaranteed to be the same as the page size due to secondary filtering. If you're looking for a particular event or events within a particular group, use the standard [Events](/meetup_api/docs/2/events/) method.",
+    "method": "OpenEvents",
+    "lat": 36.162184
+  }
+}
+
+

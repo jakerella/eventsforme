@@ -20,6 +20,7 @@ Ext.define('Events.view.EventMap', {
         var info = v.addMapMarker(e, m);
         bounds.extend(info.LatLng);
       });
+      m.fitBounds(bounds);
       m.setCenter(bounds.getCenter());
 
       // Events to add and remove markers when records changed
@@ -53,8 +54,6 @@ Ext.define('Events.view.EventMap', {
       title: e.get('title')
     });
     e.gmapMarker = marker;
-
-    console.log("adding event to map", e, marker);
 
     google.maps.event.addListener(marker, 'click', function() {
       Events.app.redirectTo('view/'+e.get('id'));

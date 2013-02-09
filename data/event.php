@@ -1,78 +1,57 @@
 <?php
-$data = array(
-  array(
-    'id' => 'sp-20130806-5678',
-    'title' => 'Sorta cool, I guess',
-    'description' => 'Lorem ipsum et tu brute, cut pudelag utip hethen.',
-    'category' => 'Event',
-    'link' => 'http://jordankasper.com',
-    'location' => null,
-    'start' => "2013-08-06 14:50:00",
-    'end' => null,
-    'lat' => 35.123349,
-    'lng' => -89.991245
-  ),
-  array(
-    'id' => 'mu-20130215-1234',
-    'title' => 'Super awesome fun time', 
-    'description' => 'Lorem ipsum et tu brute, cut pudelag utip hethen.', 
-    'category' => 'Party',
-    'link' => 'http://memphis.com',
-    'location' => 'Downtown Memphis',
-    'start' => "2013-02-15 18:00:00", 
-    'end' => "2013-02-15 19:00:00",
-    'lat' => 35.141810,
-    'lng' => -90.050125
-  ),
-  array(
-    'id' => 'or-20130716-666',
-    'title' => 'Sencha con', 
-    'description' => 'Lorem ipsum et tu brute, cut pudelag utip hethen.', 
-    'category' => 'Conference',
-    'link' => 'http://www.sencha.com/conference',
-    'location' => null, 
-    'start' => "2013-07-16 00:00:00", 
-    'end' => "2013-07-19 23:59:59", 
-    'lat' => 35.117100,
-    'lng' => -89.938545
-  ),
-  array(
-    'id' => 'mu-20130208-5309',
-    'title' => 'What the what?', 
-    'description' => 'Lorem ipsum et tu brute, cut pudelag utip hethen.', 
-    'category' => 'Party',
-    'link' => 'http://memphis.com',
-    'location' => 'Party House',
-    'start' => "2013-02-08 08:00:00", 
-    'end' => "2013-02-09 19:00:00",
-    'lat' => 35.144056,
-    'lng' => -89.986954
-  )
-);
 
-if (isset($_GET['id'])) {
-  
-  // header("HTTP/1.1 404 I can't do that...");
-  // echo "404 I can't do that...";
+// FOR TESTING
+if (preg_match("/^test\./", $_SERVER['HTTP_HOST']) && isset($_GET['testData'])) {
+  // header("HTTP/1.1 500 I can't do that...");
+  // echo "I can't do that...";
   // exit;
+  require('testData.php');
+  exit;
+}
 
-  $newData = array();
-  foreach ($data as $rec) {
-    if ($rec['id'] == $_GET['id']) {
-      $newData = $rec;
-      break;
+require_once('Log.php');
+require_once('App.php');
+
+// Handle uncaught exceptions amd PHP errors using custom error page
+function handleException(Exception $e) {
+  if (class_exists('App')) {
+    App::log($e);
+    App::respondError($e);
+  } else {
+    echo "Uh oh, there was a bad error! Please report this to our support staff!";
+    exit;
+  }
+}
+set_exception_handler('handleException');
+
+function handleError($code, $msg, $file, $line, array $context) {
+  if ($code > E_COMPILE_WARNING) { return; }
+  
+  if ($code >= E_ERROR) {
+    if (class_exists('App')) {
+      App::log("Error in $file on $line: $msg", PEAR_LOG_CRIT);
+      if (App::isProd()) {
+        App::respondError("Sorry, but it looks like there was a serious error. Please contact us for assistance.");
+      } else {
+        App::respondError("Error in $file on $line: $msg");
+      }
+    } else {
+      echo "Uh oh, there was a nasty error! Please report this to our support staff!";
+      exit;
     }
   }
-  $data = $newData;
+}
+set_error_handler('handleError');
+
+// Handle incoming requests
+if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+  
+  App::findEvents($_GET);
+
+} else {
+  // We don't handle other request types just yet
+  throw new BadMethodCallException("Sorry, only GET requests are supported currently.", 405);
 }
 
 
-header('Content-Type: application/json');
-
-$result = array(
-  'success' => true,
-  'results' => $data
-);
-
-echo json_encode($result);
 ?>

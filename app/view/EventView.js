@@ -4,6 +4,7 @@ Ext.define('Events.view.EventView', {
 
   config: {
     layout: { type: 'card' },
+    scrollable: true,
 
     tpl: new Ext.XTemplate(
       "<div class='eventView'>",
@@ -15,7 +16,7 @@ Ext.define('Events.view.EventView', {
         "<tpl if='category'>",
           "<p class='eventCategory subtitle'>Category: {category}</p>",
         "</tpl>",
-        "<p class='eventDescription'>{[Events.Util.escapeHtmlEntities(values.description)]}</p>",
+        "<div class='eventDescription'>{description}</div>",
       "</div>"
     ),
 

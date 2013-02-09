@@ -1,4 +1,4 @@
-Ext.define('Events.store.SearchEvents', {
+Ext.define('Events.store.LocalEvents', {
   extend: 'Ext.data.Store',
   config: {
     model: 'Events.model.Event',

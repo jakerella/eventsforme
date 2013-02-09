@@ -53,10 +53,10 @@ Ext.define('Events.view.EventNav', {
 
     var mine = Ext.getStore('MyEvents');
     if (mine.isLoaded) {
-      v.changeMyEventsBadge(mine.getAllCount());
+      v.getComponent('nav-my-events').setBadgeText(mine.getAllCount());
     }
     mine.on('load', function() {
-      v.changeMyEventsBadge(mine.getAllCount());
+      v.getComponent('nav-my-events').setBadgeText(mine.getAllCount());
     });
   },
 

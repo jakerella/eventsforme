@@ -14,7 +14,7 @@ Ext.application({
   controllers: ['Event', 'Static', 'Error'], // 'Ext.io.Controller' removed for now
   views: ['EventNav', 'EventList', 'EventView', 'EventSearch', 'EventMap', 'ErrorView'],
   models: ['Event'],
-  stores: ['SearchEvents', 'MyEvents'],
+  stores: ['LocalEvents', 'SearchEvents', 'MyEvents'],
 
   io: {
     appId: "5448ab1f-8729-4eae-917d-ba0eb45f974f",
@@ -42,6 +42,7 @@ Ext.application({
     // Destroy the #appLoadingIndicator element
     Ext.fly('appLoadingIndicator').destroy();
     
+    // Add our static components
     Ext.Viewport.add([
       {
         xtype: 'toolbar',
@@ -153,6 +154,7 @@ Ext.application({
 
   // ------------------ Application Constants ----------------- //
   
+  isProd: ((/^test\./.test(window.location.host))?true:false),
   baseUrl: Ext.namespace().location.protocol+'//'+Ext.namespace().location.host,
   defDist: 20,
   routeAliases: {
@@ -160,6 +162,19 @@ Ext.application({
     'mine': 'my-events',
     'map': 'show-map/MyEvents'
   }
+
+
+  // TODO ITEMS:
+  //   Add client search cache (local storage? memory?)
+  //   Add server search cache
+  //   Filter by date
+  //   "Add to calendar" button
+  //   Show single event on map
+  //   List sources used
+  //   Enable/Disable sources used
+  //   Suggest a new source
+  //   Suggest an event
+
 
 });
 
@@ -180,6 +195,8 @@ Ext.define("Events.Util", {
     mapButton: null,
     backBtn: null
   },
+
+  // Dealing with Views (and the UI in general)
 
   addView: function(view) {
     var v;
@@ -211,14 +228,12 @@ Ext.define("Events.Util", {
         var ni = 999;
         var oi = 0;
         Ext.each(Events.app.getHistory().getActions(), function(a, i) {
-          console.log('checking "'+a.getUrl()+'" against old & new:', curr.hash, v.hash);
           if (a.getUrl() == v.hash || Events.app.routeAliases[a.getUrl()] == v.hash) {
             ni = i;
           } else  if (curr.hash && (a.getUrl() == curr.hash || Events.app.routeAliases[a.getUrl()] == curr.hash)) {
             oi = i;
           }
         });
-        console.log('which way?', oi, ni, curr.hash, v.hash);
         dir = (ni > oi)?'left':'right';
       }
 
@@ -234,7 +249,6 @@ Ext.define("Events.Util", {
 
     return v;
   },
-
 
   // Getters/Setters for static components
   
@@ -287,23 +301,6 @@ Ext.define("Events.Util", {
     } else {
       var at = this.getNavBar().getActiveTab();
       if (at) { at.setActive(false); }
-    }
-  },
-
-
-  // Async handling
-  
-  loadError: function(op, hash) {
-    if (op.error && op.error.status) {
-      if (op.error.status > 499) {
-        Events.app.getController('Error').showServerError();
-      } else if (op.error.status == 404) {
-        Events.app.getController('Error').showNotFound(hash);
-      } else if (op.error.status > 399) {
-        Events.app.getController('Error').showOtherError(op.error.statusText+' ('+op.error.status+')');
-      }
-    } else {
-      Events.app.getController('Error').showServerError();
     }
   },
 
@@ -375,6 +372,91 @@ Ext.define("Events.Util", {
       return false;
     }
     return true;
+  },
+
+
+  // Misc Others
+  
+  handleAjaxException: function(p, r, op) {
+    console.warn("Ajax exception: ", r);
+    if (r.status) {
+      if (r.status > 499) {
+        Events.app.getController('Error').showServerError();
+      } else if (r.status == 404) {
+        Events.app.getController('Error').showNotFound(Events.app.getHistory().getToken());
+      } else if (r.status > 399) {
+        Events.app.getController('Error').showOtherError(r.status, r.responseText);
+      }
+    } else {
+      // Generic handler
+      Events.app.getController('Error').showServerError();
+    }
+  },
+  
+  
+  // Perform a deep comparison to check if two objects are equal.
+  isEqual: function(a, b) {
+    return this.__eq(a, b, [], []);
+  },
+  // Internal recursive comparison function for 'isEqual'
+  // Derived from underscore.js library: https://github.com/documentcloud/underscore/blob/master/underscore.js
+  __eq: function(a, b, aStack, bStack) {
+    if (a === b) return a !== 0 || 1 / a == 1 / b;
+    if (a == null || b == null) return a === b;
+    var c = toString.call(a);
+    if (c != toString.call(b)) return false;
+    switch (c) {
+      case '[object String]':
+        return a == String(b);
+      case '[object Number]':
+        return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
+      case '[object Date]':
+      case '[object Boolean]':
+        return +a == +b;
+      case '[object RegExp]':
+        return a.source == b.source &&
+               a.global == b.global &&
+               a.multiline == b.multiline &&
+               a.ignoreCase == b.ignoreCase;
+    }
+    if (typeof a != 'object' || typeof b != 'object') return false;
+    var length = aStack.length;
+    while (length--) {
+      if (aStack[length] == a) return bStack[length] == b;
+    }
+    aStack.push(a);
+    bStack.push(b);
+    var size = 0, result = true;
+    if (c == '[object Array]') {
+      size = a.length;
+      result = size == b.length;
+      if (result) {
+        while (size--) {
+          if (!(result = this.__eq(a[size], b[size], aStack, bStack))) break;
+        }
+      }
+    } else {
+      var aCtor = a.constructor, bCtor = b.constructor;
+      if (aCtor !== bCtor && !(Ext.isFunction(aCtor) && (aCtor instanceof aCtor) &&
+                               Ext.isFunction(bCtor) && (bCtor instanceof bCtor))) {
+        return false;
+      }
+      for (var k in a) {
+        if (hasOwnProperty.call(a, k)) {
+          size++;
+          if (!(result = hasOwnProperty.call(b, k) && this.__eq(a[k], b[k], aStack, bStack))) break;
+        }
+      }
+      if (result) {
+        for (k in b) {
+          if (hasOwnProperty.call(b, k) && !(size--)) break;
+        }
+        result = !size;
+      }
+    }
+    aStack.pop();
+    bStack.pop();
+    return result;
   },
 
 
