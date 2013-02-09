@@ -272,7 +272,6 @@ Ext.define('Events.controller.Event', {
 
     var s = Ext.getStore("SearchEvents");
     if (!s.isLoaded() || !Events.Util.isEqual(s.searchParams, params)) {
-      console.log("loading search results: ", s.isLoaded(), Events.Util.isEqual(s.searchParams, params));
       s.searchParams = params;
       s.load({
         'params': params,

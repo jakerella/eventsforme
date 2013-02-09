@@ -25,10 +25,10 @@ class App {
   // ------------------- Event Source Definition --------------------- //
   
   public static $sources = array(
-    'meetup' => array(
-      'apiKey' => '784c1c303d407a4f674272f2ee2e24',
+    'mu' => array(
       'name' => 'Meetup',
       'site' => 'http://www.meetup.com',
+      'apiKey' => '784c1c303d407a4f674272f2ee2e24',
       'defaultCategory' => 'Meetup',
       'guidPrefix' => 'mu'
     )
@@ -80,10 +80,32 @@ class App {
   }
 
 
+  public static function findEvent(array $params) {
+    $event = null;
+
+    self::log("Getting single event using params: ".json_encode($params));
+
+    if (isset($params['id'])) {
+      $m = array();
+      if (preg_match("/([a-z0-9]+)\-([0-9]{8})\-(.+)/", $params['id'], $m)) {
+        if (self::$sources[$m[1]]) {
+          $event = call_user_func(
+            array('App', "get".self::$sources[$m[1]]['name']."Event"),
+            $m[3],
+            self::$sources[$m[1]],
+            $params
+          );
+        }
+      }
+    }
+
+    self::respond($event);
+  }
+
+
   // ----------------- Handlers For All Event Sources ----------------- //
   
   public static function getMeetupEvents($info, $params) {
-    self::log("Getting Meetup events using ".json_encode($info));
     $events = array();
 
     $url = "https://api.meetup.com/2/open_events?".
@@ -92,7 +114,7 @@ class App {
            "&lon={$params['lng']}".
            "&radius={$params['dist']}".
            "&status=upcoming".
-           "&page=5".
+           "&page=30".
            "&sign=true";
     if ($params['terms']) {
       $url .= "&text={$params['terms']}&and_text=true";
@@ -110,51 +132,15 @@ class App {
     
     // process the response
     if ($status == 200) {
-      $respJson = json_decode($response);
+      $respJson = json_decode(utf8_encode($response));
 
       // Handle results
       if (isset($respJson->results) && sizeof($respJson->results) > 0) {
         foreach ($respJson->results as $result) {
-          if (isset($result->time) && is_numeric($result->time)) {
-            $start = round($result->time / 1000);
-          } else {
-            continue;
+          $event = self::processMeetupEventResult($result, $info, $params);
+          if ($event) {
+            array_push($events, $event);
           }
-          $end = null;
-          if (isset($result->duration) && is_numeric($result->duration)) {
-            $end = round($start + ($result->duration / 1000));
-          }
-
-          if (isset($result->venue) && isset($result->venue->lat) && is_numeric($result->venue->lat)) {
-            $lat = $result->venue->lat;
-            $lng = $result->venue->lon;
-          } else {
-            $lat = $params['lat'];
-            $lng = $params['lng'];
-          }
-
-          $loc = null;
-          if (isset($result->venue) && isset($result->venue->name) && strlen($result->venue->name)) {
-            $loc = $result->venue->name;
-          }
-          $addr = null;
-          if (isset($result->venue) && isset($result->venue->address_1) && strlen($result->venue->address_1)) {
-            $addr = $result->venue->address_1.", ".$result->venue->city;
-          }
-
-          array_push($events, array(
-            'id' => $info['guidPrefix'].'-'.date('Ymd', $start).'-'.$result->id,
-            'title' => $result->name,
-            'description' => $result->description,
-            'category' => 'Meetup',
-            'link' => $result->event_url,
-            'location' => $loc,
-            'address' => $addr,
-            'start' => date('Y-m-d H:i:s', $start),
-            'end' => (($end)?date('Y-m-d H:i:s', $end):null),
-            'lat' => $lat,
-            'lng' => $lng
-          ));
         }
       }
       
@@ -171,6 +157,91 @@ class App {
     return $events;
   }
 
+  public static function getMeetupEvent($id, $info, $params) {
+    $event = null;
+
+    $url = "https://api.meetup.com/2/event/$id?".
+           "key={$info['apiKey']}".
+           "&page=1".
+           "&sign=true";
+
+    // send the request
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    
+    $response = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    // process the response
+    if ($status == 200) {
+      $result = json_decode(utf8_encode($response));
+
+      $event = self::processMeetupEventResult($result, $info, $params);
+      
+    } else if ($status == 400) {
+      self::log("Bad request to api.meetup.com: ".$response, PEAR_LOG_WARNING);
+    } else if ($status == 401) {
+      self::log("Bad API key for api.meetup.com: ".$info['apiKey'], PEAR_LOG_ERR);
+    } else if ($status > 499) {
+      self::log("Server error from api.meetup.com: ".$response, PEAR_LOG_ERR);
+    } else {
+      self::log("Unknown error ($status) from api.meetup.com: ".$response, PEAR_LOG_ERR);
+    }
+    
+    return $event;
+  }
+
+  private static function processMeetupEventResult($result, $info, $params) {
+    $event = null;
+    App::log("MEETUP: processing event ".$result->id);
+
+    if (isset($result->time) && is_numeric($result->time)) {
+      $start = round($result->time / 1000);
+    } else {
+      App::log("MEETUP: no (or bad) start time (".$result->time.")");
+      return null;
+    }
+    $end = null;
+    if (isset($result->duration) && is_numeric($result->duration)) {
+      $end = round($start + ($result->duration / 1000));
+    }
+
+    if (isset($result->venue) && isset($result->venue->lat) && is_numeric($result->venue->lat)) {
+      $lat = $result->venue->lat;
+      $lng = $result->venue->lon;
+    } else {
+      $lat = $params['lat'];
+      $lng = $params['lng'];
+    }
+
+    $loc = null;
+    if (isset($result->venue) && isset($result->venue->name) && strlen($result->venue->name)) {
+      $loc = $result->venue->name;
+    }
+    $addr = null;
+    if (isset($result->venue) && isset($result->venue->address_1) && strlen($result->venue->address_1)) {
+      $addr = $result->venue->address_1.", ".$result->venue->city.", ".$result->venue->state;
+    }
+
+    $event = array(
+      'id' => $info['guidPrefix'].'-'.date('Ymd', $start).'-'.$result->id,
+      'title' => $result->name,
+      'description' => $result->description,
+      'category' => 'Meetup',
+      'link' => $result->event_url,
+      'location' => $loc,
+      'address' => $addr,
+      'start' => date('Y-m-d H:i:s', $start),
+      'end' => (($end)?date('Y-m-d H:i:s', $end):null),
+      'lat' => $lat,
+      'lng' => $lng
+    );
+
+    return $event;
+  }
 
 
   // ------------------------- Various Helpers ----------------------- //

@@ -10,6 +10,7 @@ Ext.define('Events.model.Event', {
       {name: 'description', type: 'string'},
       {name: 'link', type: 'string'},
       {name: 'location', type: 'string'},
+      {name: 'address', type: 'string'},
       {name: 'start', type: 'date', dateFormat: 'Y-m-d H:i:s'},
       {name: 'end', type: 'date', dateFormat: 'Y-m-d H:i:s'},
       {name: 'lat', type: 'float'},
