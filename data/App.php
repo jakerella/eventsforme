@@ -2,7 +2,8 @@
 
 class App {
   // Some constants
-  const DEFAULT_DIST = 20;
+  const DEFAULT_DIST = 10;
+  const DEFAULT_DAYS = 7;
   const EMAIL = "jordan@jordankasper.com";
   const GOOGLE_API_KEY = "AIzaSyAcriS9XJQ1e-LRixsdEZ4OmahIbG8Xmqw";
   const LOG_LOCATION_TEST = '/var/log/jk/efm.log';
@@ -42,7 +43,7 @@ class App {
 
   public static function findEvents(array $params) {
     $params = array_merge(
-      array('terms'=>null, 'loc'=>null, 'lat'=>null, 'lng'=>null, 'dist'=>self::DEFAULT_DIST), 
+      array('terms'=>null, 'loc'=>null, 'lat'=>null, 'lng'=>null, 'time'=>self::DEFAULT_DAYS, 'dist'=>self::DEFAULT_DIST), 
       ($params)?$params:array()
     );
 
@@ -130,12 +131,12 @@ class App {
            "&sign=true";
 
     if ($params['terms']) {
-      $url .= "&text={$params['terms']}&and_text=true";
+      $url .= "&text=".urlencode($params['terms'])."&and_text=true";
     }
 
-    // TODO: Allow time range as param
-    
-    $url .= "&time=,14d"; // default to limiting to events within 14 days
+    if (isset($params['time'])) {
+      $url .= "&time=,".$params['time']."d";
+    }
 
     // send the request
     $ch = curl_init();

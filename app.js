@@ -156,7 +156,8 @@ Ext.application({
   
   isProd: ((/^test\./.test(window.location.host))?true:false),
   baseUrl: Ext.namespace().location.protocol+'//'+Ext.namespace().location.host,
-  defDist: 20,
+  defDist: 10,
+  defDays: 7,
   routeAliases: {
     '': 'local',
     'mine': 'my-events',
@@ -165,7 +166,6 @@ Ext.application({
 
 
   // TODO ITEMS:
-  //   Filter search by date (today, tomorrow, next X days)
   //   Add server search results cache (serialize() with couchdb?)
   //   Add server geocode cache (couchdb? round gps coor?)
   //   Add client search results cache (local storage? just memory?)

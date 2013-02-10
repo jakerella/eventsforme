@@ -36,12 +36,26 @@ Ext.define('Events.view.EventSearch', {
       placeHolder: 'City, State',
       value: locVal
     };
+
+    var time = {
+      xtype: 'selectfield',
+      name: 'time',
+      label: 'Time Range',
+      value: Events.app.defDays,
+      options: [
+        {text: 'Today',  value: '1'},
+        {text: 'Next 3 Days', value: '3'},
+        {text: 'Next 7 Days',  value: '7'},
+        {text: 'Next 2 Weeks',  value: '14'},
+        {text: 'Next 30 Days',  value: '30'}
+      ]
+    };
     
     var dist = {
       xtype: 'selectfield',
       name: 'dist',
       label: 'Distance',
-      value: '20',
+      value: Events.app.defDist,
       options: [
         {text: '5 miles',  value: '5'},
         {text: '10 miles', value: '10'},
@@ -66,7 +80,7 @@ Ext.define('Events.view.EventSearch', {
     this.add({
       xtype: 'fieldset',
       id: 'search-fields',
-      items: [terms, loc, dist, go]
+      items: [terms, loc, time, dist, go]
     });
   }
   
