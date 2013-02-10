@@ -64,9 +64,7 @@ Ext.define('Events.controller.Event', {
   init: function() {
     Ext.getStore("MyEvents").load({
       callback: function(r, op, s) {
-        if (s) {
-          console.debug('MyEvents loaded', r);
-        } else {
+        if (!s) {
           Ext.Msg.alert('', "Sorry, but we weren't able to load your saved events. Please let us know if the problem continues!", Ext.emptyFn);
           console.warn(op);
         }
@@ -75,8 +73,6 @@ Ext.define('Events.controller.Event', {
   },
 
   getEventAndShow: function(id) {
-    console.log('getting event and showing');
-    
     if (!id) {
       Events.app.getController('Error').showOtherError(401, "Sorry, but I wasn't able to load that event, can you try again?");
       return;
@@ -313,7 +309,6 @@ Ext.define('Events.controller.Event', {
 
     var s = Ext.getStore("LocalEvents");
     if (!s.isLoaded() || !Events.Util.isEqual(s.searchParams, params)) {
-      console.log("loading local events: ", s.isLoaded(), Events.Util.isEqual(s.searchParams, params));
       s.searchParams = params;
       s.load({
         'params': params,
@@ -339,19 +334,22 @@ Ext.define('Events.controller.Event', {
   showMyEvents: function() {
     Events.Util.setActiveTab('my-events');
 
+    var s = Ext.getStore("MyEvents").load();
+
     Events.Util.addView({
       xtype: 'eventlist',
       id: 'my-events',
       hash: 'my-events',
       title: 'My Events',
-      store: Ext.getStore("MyEvents").load({
-        callback: function(r, op) {
-          if (r.length) {
-            Events.Util.getMapButton().setHidden(false);
-          }
-        }
-      })
+      store: s
     });
+
+    // wait for store to be loaded and view added to turn on the map button
+    setTimeout(function() {
+      if (s.getAllCount()) {
+        Events.Util.getMapButton().setHidden(false);
+      }
+    }, 200);
   },
 
   handleShowMapClick: function(store) {

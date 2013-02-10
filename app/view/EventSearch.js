@@ -14,9 +14,6 @@ Ext.define('Events.view.EventSearch', {
     if (Ext.feature.has('Geolocation')) {
       Ext.device.Geolocation.getCurrentPosition({
         success: function(pos) {
-
-          // TODO: get "City, State" instead
-
           v.addFormViews(pos.coords.latitude.toFixed(4)+', '+pos.coords.longitude.toFixed(4));
         },
         failure: function() { v.addFormViews(''); }
@@ -36,7 +33,7 @@ Ext.define('Events.view.EventSearch', {
     var loc = {
       xtype: 'searchfield',
       name: 'loc',
-      placeHolder: 'Location',
+      placeHolder: 'City, State',
       value: locVal
     };
     

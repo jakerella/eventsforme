@@ -165,15 +165,17 @@ Ext.application({
 
 
   // TODO ITEMS:
-  //   Add client search cache (local storage? memory?)
-  //   Add server search cache
-  //   Filter by date
-  //   "Add to calendar" button
+  //   Filter search by date (today, tomorrow, next X days)
+  //   Add server search results cache (serialize() with couchdb?)
+  //   Add server geocode cache (couchdb? round gps coor?)
+  //   Add client search results cache (local storage? just memory?)
   //   Show single event on map
   //   List sources used
   //   Enable/Disable sources used
+  //   Add event to My Events from form
   //   Suggest a new source
-  //   Suggest an event
+  //   Suggest event for publication (from self-created one)
+  //   Export all saved events as iCal
 
 
 });
@@ -248,6 +250,17 @@ Ext.define("Events.Util", {
     }, 200);
 
     return v;
+  },
+
+  setLoading: function(loading) {
+    if (!!loading) {
+      Ext.Viewport.setMasked({
+        xtype: 'loadmask',
+        message: 'Finding events...'
+      });
+    } else {
+      Ext.Viewport.setMasked(false);
+    }
   },
 
   // Getters/Setters for static components

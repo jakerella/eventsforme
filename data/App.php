@@ -3,6 +3,8 @@
 class App {
   // Some constants
   const DEFAULT_DIST = 20;
+  const EMAIL = "jordan@jordankasper.com";
+  const GOOGLE_API_KEY = "AIzaSyAcriS9XJQ1e-LRixsdEZ4OmahIbG8Xmqw";
   const LOG_LOCATION_TEST = '/var/log/jk/efm.log';
   const LOG_LOCATION_PROD = '/home/events/logs/main.log';
   const LOG_LEVEL_TEST = PEAR_LOG_DEBUG;
@@ -46,18 +48,28 @@ class App {
 
     self::log("Getting events using params: ".json_encode($params));
 
-    if (!isset($params['loc']) || strlen($params['loc']) < 1) {
-      throw new InvalidArgumentException("Sorry, but you must provide a location to search in!", 400);
-    }
-
     // convert location to lat/lng
     $m = array();
-    if (preg_match("/^[ ]*(\-?[0-9]{1,3}\.[0-9]{2,15})\,[ ]*(-[0-9]{1,3}\.[0-9]{2,15})[ ]*$/", $params['loc'], $m)) {
-      $params['lat'] = $m[1];
-      $params['lng'] = $m[2];
+    if (isset($params['lat']) && isset($params['lng']) && 
+        is_numeric($params['lat']) && is_numeric($params['lng'])) {
+      // Use the values as they are
+      $params['lat'] = floatval($params['lat']);
+      $params['lng'] = floatval($params['lng']);
+
+    } else if (preg_match("/^[ ]*(\-?[0-9]{1,3}\.[0-9]{2,15})\,[ ]*(-[0-9]{1,3}\.[0-9]{2,15})[ ]*$/", $params['loc'], $m)) {
+      $params['lat'] = floatval($m[1]);
+      $params['lng'] = floatval($m[2]);
+
+    } else if (isset($params['loc']) && strlen($params['loc'])) {
+
+      $coor = self::geocode($params['loc']);
+      if ($coor && sizeof($coor) == 2) {
+        $params['lat'] = floatval($coor['latitude']);
+        $params['lng'] = floatval($coor['longitude']);
+      }
 
     } else {
-      // try to get lat/lng from google?
+      throw new InvalidArgumentException("Sorry, but you must provide a location to search in!", 400);
     }
 
     if (!$params['lat'] || !$params['lng']) {
@@ -114,11 +126,16 @@ class App {
            "&lon={$params['lng']}".
            "&radius={$params['dist']}".
            "&status=upcoming".
-           "&page=30".
+           "&page=40".
            "&sign=true";
+
     if ($params['terms']) {
       $url .= "&text={$params['terms']}&and_text=true";
     }
+
+    // TODO: Allow time range as param
+    
+    $url .= "&time=,14d"; // default to limiting to events within 14 days
 
     // send the request
     $ch = curl_init();
@@ -136,6 +153,7 @@ class App {
 
       // Handle results
       if (isset($respJson->results) && sizeof($respJson->results) > 0) {
+        App::log("Found ".sizeof($respJson->results)." MEETUP events");
         foreach ($respJson->results as $result) {
           $event = self::processMeetupEventResult($result, $info, $params);
           if ($event) {
@@ -196,7 +214,6 @@ class App {
 
   private static function processMeetupEventResult($result, $info, $params) {
     $event = null;
-    App::log("MEETUP: processing event ".$result->id);
 
     if (isset($result->time) && is_numeric($result->time)) {
       $start = round($result->time / 1000);
@@ -265,6 +282,7 @@ class App {
       );
     }
     
+    $trace = "";
     if ($msgOrException instanceof Exception) {
       if ($msgOrException instanceof InvalidArgumentException ||
           $msgOrException instanceof BadMethodCallException) {
@@ -273,9 +291,27 @@ class App {
         $level = ($level === null)?PEAR_LOG_ERR:$level;
       }
       $msg = get_class($msgOrException)." on line ".$msgOrException->getLine()." of ".$msgOrException->getFile().": ".$msgOrException->getMessage();
+      $trace = $msgOrException->getTraceAsString();
 
     } else {
       $msg = $msgOrException;
+      $trace = var_export(debug_backtrace(), true);
+    }
+
+    if (self::isProd() && $level <= PEAR_LOG_ERR) {
+      $headers = "From: eventsfor.me logger <noreply@eventsfor.me>\n".
+                   "MIME-Version: 1.0\n".
+                   "Content-type: text/plain; charset=utf-8\n";
+      $message = "Hello,\n\nThere was a message logged at or above your indicated email level (".PEAR_LOG_ERR."). ".
+                 "See below for the full content of the error.\n\n".
+                 "Time: ".date("Y-m-d H:i:s")."\n".
+                 "User IP: ".((isset($_SERVER['REMOTE_ADDR']))?$_SERVER['REMOTE_ADDR']:'(unknown)')."\n".
+                 "Message: $msg\n".
+                 "Stack Trace:\n".$trace."\n".
+                 "This log message will also appear in the log file.\n\n".
+                 "Thanks,\n--Logger";
+      // I'd rather not crash the app if the email fails
+      @mail(self::EMAIL, "eventsfor.me error ({$level})", $message, $headers);
     }
 
     $level = ($level === null)?PEAR_LOG_DEBUG:$level;
@@ -283,6 +319,50 @@ class App {
     $msg = $ip." ".$msg;
 
     self::$logger->log($msg, $level);
+  }
+
+  public static function geocode($input) {
+    $coor = null;
+    if (!$input || !strlen($input)) { return $coor; }
+
+    // TODO: use cache if available
+
+    $addr = preg_replace("/ /", '+',$input);
+    $url = "http://maps.googleapis.com/maps/api/geocode/json?address=".urlencode($addr)."&sensor=false";
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    $resp = curl_exec($ch);
+    $respJson = json_decode($resp, true);
+
+    if ($respJson['status'] == 'ZERO_RESULTS') {
+
+      return $coor;
+
+    } else if ($respJson['status'] == 'OVER_QUERY_LIMIT') {
+
+      throw new DomainException("Google geocoding call returned OVER_QUERY_LIMIT", 503);
+
+    } else if ($respJson['status'] != 'OK') {
+
+      App::log("Google geocoding failed with value: ".$respJson['status'], PEAR_LOG_WARNING);
+      return $coor;
+
+    } else {
+      // "OK" response, so use values
+      $geometry = $respJson['results'][0]['geometry'];
+
+      $coor = array(
+        'latitude' => $geometry['location']['lat'],
+        'longitude' => $geometry['location']['lng']
+      );
+
+      // TODO: cache results
+
+    }
+
+    return $coor;
   }
 
 

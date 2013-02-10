@@ -19,6 +19,10 @@ Ext.define('Events.store.SearchEvents', {
         property : "start",
         direction: "ASC"
       }
-    ]
+    ],
+    listeners: {
+      beforeload: function() { Events.Util.setLoading(true); },
+      load: function() { Events.Util.setLoading(false); }
+    }
   }
 });
