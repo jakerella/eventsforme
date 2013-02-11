@@ -167,9 +167,10 @@ Ext.application({
 
   // TODO ITEMS:
   //   Add other event sources
+  //   Add "tickets required" text/icon and price (if available)
+  //   Add source to individual event view (maybe with icon?)
   //   Add static content
-  //   Add client search results cache (local storage? just memory?)
-  //   Show single event on map
+  //   Allow single event retrieval from cache
   //   List sources used
   //   Enable/Disable sources used
   //   Add event to My Events from form
@@ -177,6 +178,7 @@ Ext.application({
   //   Suggest event for publication (from self-created one)
   //   Export all saved events as iCal
   //   New styling/theme
+  //   Region-specific sources (metro areas, like LA Times event listings)
 
 });
 

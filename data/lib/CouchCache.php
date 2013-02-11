@@ -168,14 +168,19 @@ class CouchException extends Exception {
   }
 }
 class ConnectionException extends CouchException { }
-class NotFoundException extends CouchException {
-  public function __construct($msg = "", $code = 404) {
-    parent::__construct($msg, $code);
+
+if (!class_exists('NotFoundException')) {
+  class NotFoundException extends Exception {
+    public function __construct($msg = "", $code = 404) {
+      parent::__construct($msg, $code);
+    }
   }
 }
-class BadRequestException extends CouchException {
-  public function __construct($msg = "", $code = 400) {
-    parent::__construct($msg, $code);
+if (!class_exists('BadRequestException')) {
+  class BadRequestException extends Exception {
+    public function __construct($msg = "", $code = 400) {
+      parent::__construct($msg, $code);
+    }
   }
 }
 ?>

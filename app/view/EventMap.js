@@ -17,8 +17,10 @@ Ext.define('Events.view.EventMap', {
 
       var bounds = new google.maps.LatLngBounds();
       this.getStore().each(function(e) {
-        var info = v.addMapMarker(e, m);
-        bounds.extend(info.LatLng);
+        if (e.get('lat') && e.get('lng')) {
+          var info = v.addMapMarker(e, m);
+          bounds.extend(info.LatLng);
+        }
       });
       m.fitBounds(bounds);
       m.setCenter(bounds.getCenter());
@@ -26,7 +28,9 @@ Ext.define('Events.view.EventMap', {
       // Events to add and remove markers when records changed
       this.getStore().on('addrecords', function(s, recs) {
         Ext.each(recs, function() {
-          v.addMapMarker(this, m);
+          if (this.get('lat') && this.get('lng')) {
+            v.addMapMarker(this, m);
+          }
         });
       });
 

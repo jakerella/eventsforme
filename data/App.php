@@ -1,6 +1,7 @@
 <?php
 
 require_once('lib/CouchCache.php');
+require_once('sources/EventSource.php');
 
 class App {
   // FOR TESTING
@@ -37,22 +38,23 @@ class App {
   // ------------------- Event Source Definition --------------------- //
   
   public static $sources = array(
-    'mu' => array(
-      'name' => 'Meetup',
-      'site' => 'http://www.meetup.com',
-      'apiKey' => '784c1c303d407a4f674272f2ee2e24',
-      'defaultCategory' => 'Meetup',
-      'guidPrefix' => 'mu'
-    )
+    'mu' => 'MeetupSource'
+
+    // Yahoo - http://upcoming.yahoo.com/services/api/event.search.php
+    // Eventbrite - http://developer.eventbrite.com/doc/events/event_search/
+    // Eventful - http://api.eventful.com/docs/events/search
+    // Google Places - https://developers.google.com/places/documentation/details
+    // Zvents - http://corporate.zvents.com/products/mobile_api.html
+    // Goodreads - http://www.goodreads.com/api#events.list ... not sure about this one...
 
   );
 
 
   // -------------------- Handle Incoming Request --------------------- //
 
-  public static function findEvents(array $params) {
+  public static function findEvents(array $params = null) {
     $params = array_merge(
-      array('terms'=>null, 'loc'=>null, 'lat'=>null, 'lng'=>null, 'time'=>self::DEFAULT_DAYS, 'dist'=>self::DEFAULT_DIST, 'page'=>1), 
+      EventSource::$defaultParams,
       ($params)?$params:array()
     );
 
@@ -87,6 +89,7 @@ class App {
       throw new InvalidArgumentException("Sorry, but weren't able to determine your location! Can you try again?", 400);
     }
 
+
     // our result array
     $events = array();
 
@@ -100,32 +103,44 @@ class App {
     }
     $lat = round($params['lat'], 2);
     $lng = round($params['lng'], 2);
-    $sid = "search-".$terms.$lat."-".$lng."-".$params['time']."-".$params['dist']."-".$params['page'];
+    $sid = strtolower("search-".$terms.$lat."-".$lng."-".$params['time']."-".$params['dist']."-".$params['page']);
+
 
     // use cached search results if available
     try {
       $resultCache = self::getCache(self::SEARCH_CACHE)->getById($sid);
       App::log("Using cached search results for ".$sid);
       
+      // respond with our results
       self::respond($resultCache->events);
 
     } catch (NotFoundException $nfe) {
-      // let these go, just means we need geocode this one fresh
+      // let these go, just means we need search for these fresh
     } catch (CouchException $ce) {
       // We don't want to fail just because the cache failed...
       App::log($ce);
     }
 
-    // Get Events fresh from all sources
-    foreach (self::$sources as $name => $info) {
-      $events = array_merge($events, call_user_func(
-        array('App', "get{$info['name']}Events"),
-        $info,
-        $params
-      ));
+
+    // Get Events fresh from all sources if not in cache
+    foreach (self::$sources as $prefix => $class) {
+      self::loadSource($class);
+      $source = new $class(self::$logger);
+
+      try {
+        $sourceEvents = $source->getEvents($params);
+        if (is_array($sourceEvents)) {
+          $events = array_merge($events, $sourceEvents);
+        }
+      } catch (Exception $e) {
+        // Let Exceptions on an individual source go so that the whole request doesn't crash
+        self::log($e);
+      }
+
     }
 
-    // add search results to cache
+
+    // add new search results to cache
     try {
       App::log("Caching new search result data for ".$sid);
       self::getCache(self::SEARCH_CACHE)->create($sid, array('events'=>$events), self::SEARCH_CACHE_TTL); // cache for a few hours
@@ -134,6 +149,7 @@ class App {
       App::log($ce);
     }
 
+    // respond with our results
     self::respond($events);
   }
 
@@ -143,167 +159,22 @@ class App {
 
     self::log("Getting single event using params: ".json_encode($params));
 
-    if (isset($params['id'])) {
-      $m = array();
-      if (preg_match("/([a-z0-9]+)\-([0-9]{8})\-(.+)/", $params['id'], $m)) {
-        if (self::$sources[$m[1]]) {
-          $event = call_user_func(
-            array('App', "get".self::$sources[$m[1]]['name']."Event"),
-            $m[3],
-            self::$sources[$m[1]],
-            $params
-          );
-        }
+    if (isset($params['id']) && strlen($params['id']) > 2) {
+      $type = substr($params['id'], 0, 2);
+      if (self::$sources[$type]) {
+
+        // TODO: use cache if possible
+
+        self::loadSource(self::$sources[$type]);
+        $source = new self::$sources[$type](self::$logger);
+        $event = $source->getEventByGUID($params['id']);
+
+        // TODO: add to cache if necessary
+        
       }
     }
 
     self::respond($event);
-  }
-
-
-  // ----------------- Handlers For All Event Sources ----------------- //
-  
-  public static function getMeetupEvents($info, $params) {
-    $events = array();
-
-    $url = "https://api.meetup.com/2/open_events?".
-           "key={$info['apiKey']}".
-           "&lat={$params['lat']}".
-           "&lon={$params['lng']}".
-           "&radius={$params['dist']}".
-           "&status=upcoming".
-           "&page=40".
-           "&sign=true";
-
-    if ($params['terms']) {
-      $url .= "&text=".urlencode($params['terms'])."&and_text=true";
-    }
-
-    if (isset($params['time'])) {
-      $url .= "&time=,".$params['time']."d";
-    }
-
-    // send the request
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    
-    $response = curl_exec($ch);
-    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    
-    // process the response
-    if ($status == 200) {
-      $respJson = json_decode(utf8_encode($response));
-
-      // Handle results
-      if (isset($respJson->results) && sizeof($respJson->results) > 0) {
-        App::log("Found ".sizeof($respJson->results)." MEETUP events");
-        foreach ($respJson->results as $result) {
-          $event = self::processMeetupEventResult($result, $info, $params);
-          if ($event) {
-            array_push($events, $event);
-          }
-        }
-      }
-      
-    } else if ($status == 400) {
-      self::log("Bad request to api.meetup.com: ".$response, PEAR_LOG_WARNING);
-    } else if ($status == 401) {
-      self::log("Bad API key for api.meetup.com: ".$info['apiKey'], PEAR_LOG_ERR);
-    } else if ($status > 499) {
-      self::log("Server error from api.meetup.com: ".$response, PEAR_LOG_ERR);
-    } else {
-      self::log("Unknown error ($status) from api.meetup.com: ".$response, PEAR_LOG_ERR);
-    }
-    
-    return $events;
-  }
-
-  public static function getMeetupEvent($id, $info, $params) {
-    $event = null;
-
-    $url = "https://api.meetup.com/2/event/$id?".
-           "key={$info['apiKey']}".
-           "&page=1".
-           "&sign=true";
-
-    // send the request
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    
-    $response = curl_exec($ch);
-    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    
-    // process the response
-    if ($status == 200) {
-      $result = json_decode(utf8_encode($response));
-
-      $event = self::processMeetupEventResult($result, $info, $params);
-      
-    } else if ($status == 400) {
-      self::log("Bad request to api.meetup.com: ".$response, PEAR_LOG_WARNING);
-    } else if ($status == 401) {
-      self::log("Bad API key for api.meetup.com: ".$info['apiKey'], PEAR_LOG_ERR);
-    } else if ($status > 499) {
-      self::log("Server error from api.meetup.com: ".$response, PEAR_LOG_ERR);
-    } else {
-      self::log("Unknown error ($status) from api.meetup.com: ".$response, PEAR_LOG_ERR);
-    }
-    
-    return $event;
-  }
-
-  private static function processMeetupEventResult($result, $info, $params) {
-    $event = null;
-
-    if (isset($result->time) && is_numeric($result->time)) {
-      $start = round($result->time / 1000);
-    } else {
-      App::log("MEETUP: no (or bad) start time (".$result->time.")");
-      return null;
-    }
-    $end = null;
-    if (isset($result->duration) && is_numeric($result->duration)) {
-      $end = round($start + ($result->duration / 1000));
-    }
-
-    if (isset($result->venue) && isset($result->venue->lat) && is_numeric($result->venue->lat)) {
-      $lat = $result->venue->lat;
-      $lng = $result->venue->lon;
-    } else {
-      $lat = $params['lat'];
-      $lng = $params['lng'];
-    }
-
-    $loc = null;
-    if (isset($result->venue) && isset($result->venue->name) && strlen($result->venue->name)) {
-      $loc = $result->venue->name;
-    }
-    $addr = null;
-    if (isset($result->venue) && isset($result->venue->address_1) && strlen($result->venue->address_1)) {
-      $addr = $result->venue->address_1.", ".$result->venue->city.", ".$result->venue->state;
-    }
-
-    $event = array(
-      'id' => $info['guidPrefix'].'-'.date('Ymd', $start).'-'.$result->id,
-      'title' => $result->name,
-      'description' => $result->description,
-      'category' => 'Meetup',
-      'link' => $result->event_url,
-      'location' => $loc,
-      'address' => $addr,
-      'start' => date('Y-m-d H:i:s', $start),
-      'end' => (($end)?date('Y-m-d H:i:s', $end):null),
-      'lat' => $lat,
-      'lng' => $lng
-    );
-
-    return $event;
   }
 
 
@@ -313,7 +184,7 @@ class App {
     return !preg_match("/^test\./", $_SERVER['HTTP_HOST']);
   }
 
-  public static function getCache($type) {
+  private static function getCache($type) {
     if (!self::isProd() && !self::TEST_CACHE) {
       return (new FakeCache());
     } else {
@@ -323,6 +194,15 @@ class App {
       return self::$cache[$type];
     }
   }
+
+  private static function loadSource($class) {
+    if (file_exists("sources/{$class}.php")) {
+      require_once("sources/{$class}.php");
+    } else {
+      throw new InvalidArgumentException("Sorry, but that is not a valid event source!");
+    }
+  }
+
 
   public static function log($msgOrException, $level = null) {
     if (!self::$logger) {
@@ -375,8 +255,9 @@ class App {
     $ip = (isset($_SERVER['REMOTE_ADDR']))?$_SERVER['REMOTE_ADDR']:'(unknown IP)';
     $msg = $ip." ".$msg;
 
-    self::$logger->log($msg, $level);
+    return self::$logger->log($msg, $level);
   }
+
 
   public static function geocode($input) {
     $coor = null;
@@ -388,7 +269,7 @@ class App {
 
     // use cached geocode data if available
     try {
-      $geoCache = self::getCache(self::GEO_CACHE)->getById("geocode-".$addr);
+      $geoCache = self::getCache(self::GEO_CACHE)->getById("geocode-".strtolower($addr));
       if (isset($geoCache->latitude) && isset($geoCache->longitude)) {
         App::log("Using cached geocode data for ".$addr);
         return array(
@@ -436,7 +317,7 @@ class App {
       // cache result for use later
       try {
         App::log("Caching new geocode data for ".$addr);
-        self::getCache(self::GEO_CACHE)->create("geocode-".$addr, $coor, self::GEOCODE_CACHE_TTL);
+        self::getCache(self::GEO_CACHE)->create("geocode-".strtolower($addr), $coor, self::GEOCODE_CACHE_TTL);
       } catch (CouchException $ce) {
         // We don't want to fail just because the cache failed...
         App::log($ce);
