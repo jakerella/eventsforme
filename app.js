@@ -166,8 +166,8 @@ Ext.application({
 
 
   // TODO ITEMS:
-  //   Add server search results cache (serialize() with couchdb?)
-  //   Add server geocode cache (couchdb? round gps coor?)
+  //   Add other event sources
+  //   Add static content
   //   Add client search results cache (local storage? just memory?)
   //   Show single event on map
   //   List sources used
@@ -176,7 +176,7 @@ Ext.application({
   //   Suggest a new source
   //   Suggest event for publication (from self-created one)
   //   Export all saved events as iCal
-
+  //   New styling/theme
 
 });
 

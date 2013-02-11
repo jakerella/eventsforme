@@ -1,9 +1,17 @@
 <?php
 
+require_once('lib/CouchCache.php');
+
 class App {
+  // FOR TESTING
+  const TEST_CACHE = false; // set to true to use real CouchCache (only used in TEST)
   // Some constants
   const DEFAULT_DIST = 10;
   const DEFAULT_DAYS = 7;
+  const SEARCH_CACHE_TTL = 10800; // 3 hours
+  const GEOCODE_CACHE_TTL = 2592000; // 30 days
+  const SEARCH_CACHE = "search";
+  const GEO_CACHE = "geo";
   const EMAIL = "jordan@jordankasper.com";
   const GOOGLE_API_KEY = "AIzaSyAcriS9XJQ1e-LRixsdEZ4OmahIbG8Xmqw";
   const LOG_LOCATION_TEST = '/var/log/jk/efm.log';
@@ -12,6 +20,7 @@ class App {
   const LOG_LEVEL_PROD = PEAR_LOG_INFO;
 
   // Various static members
+  private static $cache = array();
   private static $logger;
   public static $STATUS_CODES = array(
     400 => "Bad Request - Please view documentation for proper request syntax",
@@ -43,7 +52,7 @@ class App {
 
   public static function findEvents(array $params) {
     $params = array_merge(
-      array('terms'=>null, 'loc'=>null, 'lat'=>null, 'lng'=>null, 'time'=>self::DEFAULT_DAYS, 'dist'=>self::DEFAULT_DIST), 
+      array('terms'=>null, 'loc'=>null, 'lat'=>null, 'lng'=>null, 'time'=>self::DEFAULT_DAYS, 'dist'=>self::DEFAULT_DIST, 'page'=>1), 
       ($params)?$params:array()
     );
 
@@ -58,6 +67,7 @@ class App {
       $params['lng'] = floatval($params['lng']);
 
     } else if (preg_match("/^[ ]*(\-?[0-9]{1,3}\.[0-9]{2,15})\,[ ]*(-[0-9]{1,3}\.[0-9]{2,15})[ ]*$/", $params['loc'], $m)) {
+      $params['loc'] = null;
       $params['lat'] = floatval($m[1]);
       $params['lng'] = floatval($m[2]);
 
@@ -77,8 +87,36 @@ class App {
       throw new InvalidArgumentException("Sorry, but weren't able to determine your location! Can you try again?", 400);
     }
 
+    // our result array
     $events = array();
 
+
+    // Build the unique search ID from the params
+    $terms = '';
+    if ($params['terms']) {
+      $terms = preg_replace("/ /", '+', $params['terms']);
+      $terms = preg_replace("/\//", '',$terms);
+      $terms = urlencode($terms)."-";
+    }
+    $lat = round($params['lat'], 2);
+    $lng = round($params['lng'], 2);
+    $sid = "search-".$terms.$lat."-".$lng."-".$params['time']."-".$params['dist']."-".$params['page'];
+
+    // use cached search results if available
+    try {
+      $resultCache = self::getCache(self::SEARCH_CACHE)->getById($sid);
+      App::log("Using cached search results for ".$sid);
+      
+      self::respond($resultCache->events);
+
+    } catch (NotFoundException $nfe) {
+      // let these go, just means we need geocode this one fresh
+    } catch (CouchException $ce) {
+      // We don't want to fail just because the cache failed...
+      App::log($ce);
+    }
+
+    // Get Events fresh from all sources
     foreach (self::$sources as $name => $info) {
       $events = array_merge($events, call_user_func(
         array('App', "get{$info['name']}Events"),
@@ -87,7 +125,14 @@ class App {
       ));
     }
 
-    // TODO: implement search cache
+    // add search results to cache
+    try {
+      App::log("Caching new search result data for ".$sid);
+      self::getCache(self::SEARCH_CACHE)->create($sid, array('events'=>$events), self::SEARCH_CACHE_TTL); // cache for a few hours
+    } catch (CouchException $ce) {
+      // We don't want to fail just because the cache failed...
+      App::log($ce);
+    }
 
     self::respond($events);
   }
@@ -268,6 +313,17 @@ class App {
     return !preg_match("/^test\./", $_SERVER['HTTP_HOST']);
   }
 
+  public static function getCache($type) {
+    if (!self::isProd() && !self::TEST_CACHE) {
+      return (new FakeCache());
+    } else {
+      if (!isset(self::$cache[$type])) {
+        self::$cache[$type] = new CouchCache($type."-cache");
+      }
+      return self::$cache[$type];
+    }
+  }
+
   public static function log($msgOrException, $level = null) {
     if (!self::$logger) {
       self::$logger = Log::singleton(
@@ -326,10 +382,28 @@ class App {
     $coor = null;
     if (!$input || !strlen($input)) { return $coor; }
 
-    // TODO: use cache if available
-
     $addr = preg_replace("/ /", '+',$input);
-    $url = "http://maps.googleapis.com/maps/api/geocode/json?address=".urlencode($addr)."&sensor=false";
+    $addr = preg_replace("/\//", '',$addr);
+    $addr = urlencode($addr);
+
+    // use cached geocode data if available
+    try {
+      $geoCache = self::getCache(self::GEO_CACHE)->getById("geocode-".$addr);
+      if (isset($geoCache->latitude) && isset($geoCache->longitude)) {
+        App::log("Using cached geocode data for ".$addr);
+        return array(
+          'latitude' => $geoCache->latitude,
+          'longitude' => $geoCache->longitude
+        );
+      }
+    } catch (NotFoundException $nfe) {
+      // let these go, just means we need geocode this one fresh
+    } catch (CouchException $ce) {
+      // We don't want to fail just because the cache failed...
+      App::log($ce);
+    }
+    
+    $url = "http://maps.googleapis.com/maps/api/geocode/json?address=".$addr."&sensor=false";
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -359,8 +433,14 @@ class App {
         'longitude' => $geometry['location']['lng']
       );
 
-      // TODO: cache results
-
+      // cache result for use later
+      try {
+        App::log("Caching new geocode data for ".$addr);
+        self::getCache(self::GEO_CACHE)->create("geocode-".$addr, $coor, self::GEOCODE_CACHE_TTL);
+      } catch (CouchException $ce) {
+        // We don't want to fail just because the cache failed...
+        App::log($ce);
+      }
     }
 
     return $coor;
@@ -434,6 +514,48 @@ class App {
     self::respond($msg, $code, ((isset(self::$STATUS_CODES[$code]))?self::$STATUS_CODES[$code]:"Error"));
   }
 
+} // End of App class
+
+
+// Fake cacher for use in test (when enabled)
+class FakeCache {
+  public function getById($id) {
+    throw new NotFoundException("No cache in test", 408);
+  }
+
+  public function getAll() {
+    throw new NotFoundException("No cache in test", 408);
+  }
+
+  public function create($id, $data, $ttl = null) {
+    $result = new stdClass();
+    $result->ok = true;
+    $result->id = $id;
+    return $result;
+  }
+
+  public function update($id, $data) {
+    $result = new stdClass();
+    $result->ok = true;
+    $result->id = $id;
+    return $result;
+  }
+
+  public function deleteById($idOrItem) {
+    $result = new stdClass();
+    $result->ok = true;
+    if (is_object($idOrItem)) { $id = $idOrItem->_id; }
+    if (is_array($idOrItem)) { $id = $idOrItem['_id']; }
+    if (is_string($idOrItem)) { $id = $idOrItem; }
+    $result->id = $id;
+    return $result;
+  }
+
+  public function deleteAll() {
+    $result = new stdClass();
+    $result->ok = true;
+    return $result;
+  }
 }
 
 ?>
