@@ -1,6 +1,6 @@
 Ext.define('Events.controller.Event', {
   extend: 'Ext.app.Controller',
-  requires: ['Events.model.Event', 'Ext.device.Geolocation', 'Ext.io.User'],
+  requires: ['Events.model.Event', 'Ext.device.Geolocation'],
 
   config: {
     id: 'eventcontroller',
@@ -235,8 +235,6 @@ Ext.define('Events.controller.Event', {
   // ------------- SEARCH EVENTS ------------- //
 
   showSearchForm: function() {
-    console.log("Showing event search input");
-
     Events.Util.setActiveTab('search');
 
     Events.Util.addView({

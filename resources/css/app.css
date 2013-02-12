@@ -7,6 +7,24 @@
 .x-button { cursor: pointer; }
 
 
+/* =========== Other Views ============== */
+
+#optionSaveNote {
+  font-size: 0.9em;
+  color: #666;
+  text-align: center;
+  font-style: italic;
+}
+
+/*#about-view .x-layout-accordion-item .x-panel-inner {*/
+.staticScreen .x-panel-inner {
+  padding: 0.7em;
+  color: #333;
+}
+.x-layout-accordion-item .x-toolbar { cursor: pointer; }
+.donateForm { text-align: center; }
+
+
 /* =========== Event Lists and Views ============== */
 
 /* Increase height of list item so title and narrative lines fit */
@@ -29,6 +47,19 @@
   padding-right:25px;
   line-height:150%;
 }
+.eventListing .costIcon {
+  height: 1em;
+  margin: 0 -3px;
+  position: relative;
+  top: 2px;
+}
+.eventListing .ticketIcon {
+  /* Icon from FatCow Web Hosting - http://www.fatcow.com/ */
+  height: 1em;
+  position: relative;
+  top: 2px;
+  margin-right: -2px;
+}
 .eventListing h3 .saved {
   font-size: 0.8em;
   color: #2c2;
@@ -47,6 +78,12 @@
   color: #026;
   font-weight: bold;
 }
+
+.eventView .ticketIcon, .eventView .costIcon { height: 1.2em; }
+.eventView .ticketIcon { position: relative; top: 2px; }
+.eventView .costIcon { position: relative; top: 1px; }
+.eventTickets { font-size: 0.8em; }
+
 
 #my-events .eventListing .saved { display: none; }
 

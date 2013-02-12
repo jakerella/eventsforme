@@ -8,7 +8,17 @@ Ext.define('Events.view.EventView', {
 
     tpl: new Ext.XTemplate(
       "<div class='eventView'>",
-        "<h3>{title} <a href='{link}' class='eventLink x-button-icon action x-icon-mask' id='eventLink-{id}' target='_blank'></a></h3>",
+        "<h3>",
+          "{title} <a href='{link}' class='eventLink x-button-icon action x-icon-mask' id='eventLink-{id}' target='_blank'></a>",
+        "</h3>",
+        "<p class='eventTickets'>",
+          "<tpl if='tickets'>",
+            "<img src='resources/images/ticket.png' class='ticketIcon' /> required ",
+          "</tpl>",
+          "<tpl if='cost'>",
+            "<img src='resources/images/dollar.png' class='costIcon' /> {[this.formatCost(values.cost)]}",
+          "</tpl>",
+        "</p>",
         "<p class='eventTimes subtitle'>{[Events.Util.getDateTimeRange(values.start, values.end)]}</p>",
         "<tpl if='location'>",
           "<p class='eventLocation subtitle'>Location: {[Events.Util.escapeHtmlEntities(values.location)]}</p>",
@@ -16,11 +26,22 @@ Ext.define('Events.view.EventView', {
         "<tpl if='address'>",
           "<p class='eventAddress subtitle'><a href='maps:q={[Events.Util.escapeHtmlEntities(values.address)]}'>{[Events.Util.escapeHtmlEntities(values.address)]}</a></p>",
         "</tpl>",
-        "<tpl if='category'>",
-          "<p class='eventCategory subtitle'>Category: {category}</p>",
-        "</tpl>",
+        "<p class='eventMeta subtitle'>",
+          "<tpl if='category'>",
+            "<span class='eventCategory'>Category: {category}</span>",
+          "</tpl>",
+          "<tpl if='source'>",
+            " <span class='eventSource'>(source: {source})</span>",
+          "</tpl>",
+        "</p>",
         "<div class='eventDescription'>{description}</div>",
-      "</div>"
+      "</div>",
+      {
+        formatCost: function(cost) {
+          cost = Number(cost);
+          return (cost)?cost.toFixed(2):0;
+        }
+      }
     ),
 
     listeners: {

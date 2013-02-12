@@ -90,10 +90,6 @@ class App {
     }
 
 
-    // our result array
-    $events = array();
-
-
     // Build the unique search ID from the params
     $terms = '';
     if ($params['terms']) {
@@ -109,7 +105,7 @@ class App {
     // use cached search results if available
     try {
       $resultCache = self::getCache(self::SEARCH_CACHE)->getById($sid);
-      App::log("Using cached search results for ".$sid);
+      self::log("Using cached search results for ".$sid);
       
       // respond with our results
       self::respond($resultCache->events);
@@ -118,11 +114,12 @@ class App {
       // let these go, just means we need search for these fresh
     } catch (CouchException $ce) {
       // We don't want to fail just because the cache failed...
-      App::log($ce);
+      self::log($ce);
     }
 
 
     // Get Events fresh from all sources if not in cache
+    $allEvents = array();
     foreach (self::$sources as $prefix => $class) {
       self::loadSource($class);
       $source = new $class(self::$logger);
@@ -130,23 +127,38 @@ class App {
       try {
         $sourceEvents = $source->getEvents($params);
         if (is_array($sourceEvents)) {
-          $events = array_merge($events, $sourceEvents);
+          self::log("Found ".sizeof($sourceEvents)." ".$source->name." events on sid: {$sid}");
+          $allEvents = array_merge($allEvents, $sourceEvents);
         }
       } catch (Exception $e) {
         // Let Exceptions on an individual source go so that the whole request doesn't crash
         self::log($e);
       }
-
     }
+
+    // go through all events and ignore apparent duplicates
+    $events = array(); // our final array
+    $vagueIds = array(); // title | start date | location
+    foreach ($allEvents as $event) {
+      $vagueId = $event['title']."|".date("Y-m-d", strtotime($event['start']))."|".$event['location'];
+      if (in_array($vagueId, $vagueIds)) {
+        self::log("Ignoring possible duplicate events: {$vagueId}");
+        continue;
+      }
+      array_push($vagueIds, $vagueId);
+      array_push($events, $event);
+    }
+    unset($vagueIds);
+    unset($allEvents);
 
 
     // add new search results to cache
     try {
-      App::log("Caching new search result data for ".$sid);
       self::getCache(self::SEARCH_CACHE)->create($sid, array('events'=>$events), self::SEARCH_CACHE_TTL); // cache for a few hours
+      self::log("Cached new search result data for ".$sid);
     } catch (CouchException $ce) {
       // We don't want to fail just because the cache failed...
-      App::log($ce);
+      self::log($ce);
     }
 
     // respond with our results
@@ -271,7 +283,7 @@ class App {
     try {
       $geoCache = self::getCache(self::GEO_CACHE)->getById("geocode-".strtolower($addr));
       if (isset($geoCache->latitude) && isset($geoCache->longitude)) {
-        App::log("Using cached geocode data for ".$addr);
+        self::log("Using cached geocode data for ".$addr);
         return array(
           'latitude' => $geoCache->latitude,
           'longitude' => $geoCache->longitude
@@ -281,7 +293,7 @@ class App {
       // let these go, just means we need geocode this one fresh
     } catch (CouchException $ce) {
       // We don't want to fail just because the cache failed...
-      App::log($ce);
+      self::log($ce);
     }
     
     $url = "http://maps.googleapis.com/maps/api/geocode/json?address=".$addr."&sensor=false";
@@ -302,7 +314,7 @@ class App {
 
     } else if ($respJson['status'] != 'OK') {
 
-      App::log("Google geocoding failed with value: ".$respJson['status'], PEAR_LOG_WARNING);
+      self::log("Google geocoding failed with value: ".$respJson['status'], PEAR_LOG_WARNING);
       return $coor;
 
     } else {
@@ -316,11 +328,11 @@ class App {
 
       // cache result for use later
       try {
-        App::log("Caching new geocode data for ".$addr);
+        self::log("Caching new geocode data for ".$addr);
         self::getCache(self::GEO_CACHE)->create("geocode-".strtolower($addr), $coor, self::GEOCODE_CACHE_TTL);
       } catch (CouchException $ce) {
         // We don't want to fail just because the cache failed...
-        App::log($ce);
+        self::log($ce);
       }
     }
 

@@ -70,6 +70,10 @@
             "update": "delta"
         },
         {
+            "path": "vendor/Ux/layout/Accordion.css",
+            "update": "delta"
+        },
+        {
             "path": "resources/css/app.css",
             "update": "delta"
         }

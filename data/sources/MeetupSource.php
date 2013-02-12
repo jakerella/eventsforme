@@ -59,7 +59,6 @@ class MeetupSource extends EventSource {
 
       // Handle results
       if (isset($respJson->results) && sizeof($respJson->results) > 0) {
-        self::log("Found ".sizeof($respJson->results)." MEETUP events");
         foreach ($respJson->results as $result) {
           $event = $this->processEventResult($result);
           if ($event) {
@@ -148,16 +147,33 @@ class MeetupSource extends EventSource {
       $addr = $result->venue->address_1.", ".$result->venue->city.", ".$result->venue->state;
     }
 
+    $cat = $this->defaultCategory;
+    if (isset($result->group) && isset($result->group->category)) {
+      $cat = $result->group->category->name;
+    }
+
+    $tickets = false;
+    $cost = null;
+    if (isset($result->fee) && isset($result->fee->amount) && $result->fee->amount > 0) {
+      $cost = floatval($result->fee->amount);
+      if (isset($result->fee->required) && $result->fee->required == 1) {
+        $tickets = true;
+      }
+    }
+
     $event = array(
       'id' => $this->getGUID($result->id, $start),
       'title' => $result->name,
       'description' => $result->description,
-      'category' => $this->defaultCategory,
+      'category' => $cat,
+      'source' => $this->name,
       'link' => $result->event_url,
       'location' => $loc,
       'address' => $addr,
       'start' => date('Y-m-d H:i:s', $start),
       'end' => (($end)?date('Y-m-d H:i:s', $end):null),
+      'tickets' => $tickets,
+      'cost' => $cost,
       'lat' => $lat,
       'lng' => $lng
     );

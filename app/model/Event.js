@@ -7,6 +7,7 @@ Ext.define('Events.model.Event', {
       {name: 'id', type: 'string'},
       {name: 'title', type: 'string'},
       {name: 'category', type: 'string'},
+      {name: 'source', type: 'string'},
       {name: 'description', type: 'string'},
       {name: 'link', type: 'string'},
       {name: 'location', type: 'string'},
@@ -15,6 +16,8 @@ Ext.define('Events.model.Event', {
       {name: 'end', type: 'date', dateFormat: 'Y-m-d H:i:s'},
       {name: 'lat', type: 'float'},
       {name: 'lng', type: 'float'},
+      {name: 'tickets', type: 'boolean'},
+      {name: 'cost', type: 'float'},
       {name: 'saved', type: 'boolean'}
     ],
 

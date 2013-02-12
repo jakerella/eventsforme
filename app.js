@@ -2,25 +2,23 @@
 Ext.Loader.setPath({
   'Ext': 'touch/src',
   'Events': 'app',
-  'Ext.io': 'io/src/io'
+  'Ux': 'vendor/Ux'
 });
 //</debug>
 
 Ext.application({
   name: 'Events',
 
-  requires: [ 'Ext.MessageBox', 'Ext.navigation.View' ],
+  requires: [ 'Ext.MessageBox' ],
 
-  controllers: ['Event', 'Static', 'Error'], // 'Ext.io.Controller' removed for now
-  views: ['EventNav', 'EventList', 'EventView', 'EventSearch', 'EventMap', 'ErrorView'],
-  models: ['Event'],
-  stores: ['LocalEvents', 'SearchEvents', 'MyEvents'],
-
-  io: {
-    appId: "5448ab1f-8729-4eae-917d-ba0eb45f974f",
-    authOnStartup: true,
-    manualLogin: true
-  },
+  controllers: ['Event', 'Static', 'Options', 'Error'],
+  views: [
+    'EventNav', 'Options', 'About', // Static-ish elements
+    'EventList', 'EventView', 'EventSearch', 'EventMap', // For viewing/searhcing events
+    'ErrorView' // Other
+  ],
+  models: ['Event', 'Option'],
+  stores: ['LocalEvents', 'SearchEvents', 'MyEvents', 'MyOptions'],
 
   icon: {
     '57': 'resources/icons/Icon.png',
@@ -167,9 +165,6 @@ Ext.application({
 
   // TODO ITEMS:
   //   Add other event sources
-  //   Add "tickets required" text/icon and price (if available)
-  //   Add source to individual event view (maybe with icon?)
-  //   Add static content
   //   Allow single event retrieval from cache
   //   List sources used
   //   Enable/Disable sources used
@@ -178,6 +173,9 @@ Ext.application({
   //   Suggest event for publication (from self-created one)
   //   Export all saved events as iCal
   //   New styling/theme
+  //   Add sharing info
+  //   Add analytics
+  //   Add notice (and error page?) for users not on webkit browser
   //   Region-specific sources (metro areas, like LA Times event listings)
 
 });

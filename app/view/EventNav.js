@@ -29,6 +29,13 @@ Ext.define('Events.view.EventNav', {
         id: 'nav-about',
         url: 'about'
       }
+      //,
+      // {
+      //   title: 'Options',
+      //   iconCls: 'settings',
+      //   id: 'nav-options',
+      //   url: 'options'
+      // }
     ],
 
     control: {
