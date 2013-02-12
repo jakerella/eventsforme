@@ -16,9 +16,9 @@ class App {
   const EMAIL = "jordan@jordankasper.com";
   const GOOGLE_API_KEY = "AIzaSyAcriS9XJQ1e-LRixsdEZ4OmahIbG8Xmqw";
   const LOG_LOCATION_TEST = '/var/log/jk/efm.log';
-  const LOG_LOCATION_PROD = '/home/events/logs/main.log';
+  const LOG_LOCATION_PROD = '/home/jordan/logs/efm_main.log';
   const LOG_LEVEL_TEST = PEAR_LOG_DEBUG;
-  const LOG_LEVEL_PROD = PEAR_LOG_INFO;
+  const LOG_LEVEL_PROD = PEAR_LOG_DEBUG;
 
   // Various static members
   private static $cache = array();

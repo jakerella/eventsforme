@@ -30,8 +30,8 @@ Ext.define('Events.util.Helper', {
       console.log('new view added', v);
     }
 
-    if (v.title && v.title.length) {
-      this.getScreenTitle().setTitle(v.title);
+    if (v.config.title && v.config.title.length) {
+      this.getScreenTitle().setTitle(v.config.title);
     }
     // Hide titlebar buttons by default
     this.getSaveButton().setHidden(true);
@@ -45,13 +45,13 @@ Ext.define('Events.util.Helper', {
       
       // detect if this is a forward, back or new view and change direction accordingly
       var dir = 'left';
-      if (v.hash) {
+      if (v.config.hash) {
         var ni = 999;
         var oi = 0;
         Ext.each(app.getHistory().getActions(), function(a, i) {
-          if (a.getUrl() == v.hash || app.routeAliases[a.getUrl()] == v.hash) {
+          if (a.getUrl() == v.config.hash || app.routeAliases[a.getUrl()] == v.config.hash) {
             ni = i;
-          } else  if (curr.hash && (a.getUrl() == curr.hash || app.routeAliases[a.getUrl()] == curr.hash)) {
+          } else  if (curr.config.hash && (a.getUrl() == curr.config.hash || app.routeAliases[a.getUrl()] == curr.config.hash)) {
             oi = i;
           }
         });

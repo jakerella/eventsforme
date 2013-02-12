@@ -44,7 +44,7 @@ Ext.application({
     Ext.Viewport.add([
       {
         xtype: 'toolbar',
-        title: 'Find Some Events',
+        title: 'EventsFor.Me',
         id: 'screen-title',
         docked: 'top',
         items: [
@@ -91,7 +91,10 @@ Ext.application({
         id: 'app-nav',
         listeners: {
           'NavClick': {
-            fn: function(tab) { this.redirectTo(tab.url); },
+            fn: function(tab) {
+              console.log('redirecting to tab: ', tab, arguments);
+              this.redirectTo(tab.config.url);
+            },
             scope: this
           }
         }
@@ -179,6 +182,8 @@ Ext.application({
   //   Add sharing info
   //   Allow single event retrieval from cache
   //   Region-specific sources (metro areas, like LA Times event listings)
+  //   
+  //   Google has disabled use of the Maps API for this application. See the Terms of Service for more information: http://www.google.com/intl/en-US_US/help/terms_maps.html.
 
 });
 

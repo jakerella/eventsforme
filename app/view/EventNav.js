@@ -41,6 +41,7 @@ Ext.define('Events.view.EventNav', {
     control: {
       'button': {
         tap: function(tab) {
+          console.log('nav tap: ', arguments);
           this.fireEvent("NavClick", tab);
         }
       }

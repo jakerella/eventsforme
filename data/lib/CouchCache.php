@@ -103,7 +103,7 @@ class CouchCache {
     $opts = array(
       CURLOPT_URL => "http://".$this->host.":".$this->port.$url,
       CURLOPT_PORT => $this->port,
-      CURLOPT_FOLLOWLOCATION => true,
+      //CURLOPT_FOLLOWLOCATION => true,  // doesn't work in safe mode
       CURLOPT_HEADER => true,
       CURLOPT_RETURNTRANSFER => true,
       CURLOPT_NOBODY => false,

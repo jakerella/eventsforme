@@ -6,7 +6,8 @@ Ext.define('Events.controller.Static', {
     routes: {
       'about': 'showAbout',
       'donate-thanks': 'showDonateThanks'
-    }
+    },
+    shown: false
   },
 
   showAbout: function() {
@@ -19,10 +20,13 @@ Ext.define('Events.controller.Static', {
       hash: 'about'
     }, this.getApplication());
 
-    v.getItems().each(function(item, i) {
-      v.layout.collapse(item);
-    });
-    v.layout.expand(v.getItems().get(0));
+    if (!this.config.shown) {
+      v.getItems().each(function(item, i) {
+        v.layout.collapse(item);
+      });
+      v.layout.expand(v.getItems().get(0));
+    }
+    this.config.shown = true;
   },
 
   showDonateThanks: function() {
