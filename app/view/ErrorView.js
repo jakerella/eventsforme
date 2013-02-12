@@ -1,6 +1,7 @@
 Ext.define('Events.view.ErrorView', {
   extend: 'Ext.Panel',
   alias: 'widget.errorview',
+  requires: ['Events.util.Helper'],
 
   config: {
     layout: { type: 'card' },
@@ -8,7 +9,7 @@ Ext.define('Events.view.ErrorView', {
       code: 500,
       hash: '',
       msg: null,
-      detail: null,
+      detail: null
     },
 
     tpl: new Ext.XTemplate(
@@ -21,7 +22,7 @@ Ext.define('Events.view.ErrorView', {
           var m = "";
           if (values.code == 404) {
             m += "<p class='errorMsg'>Sorry, but I wasn't able to find that page! You can use the tabs at the bottom to find events near you, search for events, and more!</p>"+
-                 "<p class='errorDetail'>It looks like you were trying to get to:<br />"+Events.app.baseUrl+'#'+Events.Util.escapeHtmlEntities(values.hash)+"</p>";
+                 "<p class='errorDetail'>It looks like you were trying to get to:<br />"+Helper.getBaseUrl()+'#'+Helper.escapeHtmlEntities(values.hash)+"</p>";
 
           } else if (!values.msg) {
             m += "<p class='errorMsg'>Sorry, but it looks like there was a nasty problem. Please contact us if the problem continues!</p>";

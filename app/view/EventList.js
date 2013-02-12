@@ -1,6 +1,7 @@
 Ext.define('Events.view.EventList', {
   extend: 'Ext.dataview.List',
   alias: 'widget.eventlist',
+  requires: ['Events.util.Helper'],
 
   config: {
     loadingText: "Finding events...",
@@ -18,10 +19,10 @@ Ext.define('Events.view.EventList', {
           "{title}",
         "</h3>",
         "<tpl if='location'>",
-          "<p class='eventLocation subtitle'>{[Events.Util.escapeHtmlEntities(values.location)]}</p>",
+          "<p class='eventLocation subtitle'>{[Helper.escapeHtmlEntities(values.location)]}</p>",
         "</tpl>",
         "<p class='eventTimes subtitle'>",
-          "{[Events.Util.getDateTimeRange(values.start, values.end)]}",
+          "{[Helper.getDateTimeRange(values.start, values.end)]}",
           "{[this.saveText(values.saved)]}",
         "</p>",
       "</div>",
@@ -43,7 +44,7 @@ Ext.define('Events.view.EventList', {
       itemswipe: function(list, i, t, r, e) {
         console.log(list);
         if (e.direction == 'left') {
-          Events.app.redirectTo('view/'+r.get('id'));
+          this.fireEvent('ShowEventView', r.get('id'));
         }
       }
     }

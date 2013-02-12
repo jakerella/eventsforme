@@ -1,6 +1,7 @@
 Ext.define('Events.view.About', {
   extend: 'Ext.Panel',
   alias: 'widget.aboutview',
+  requires: ['Ext.Panel', 'Ux.layout.Accordion'],
 
   config: {
     fullscreen : true,

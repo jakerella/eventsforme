@@ -41,8 +41,7 @@ Ext.define('Events.view.EventNav', {
     control: {
       'button': {
         tap: function(tab) {
-          this.fireEvent(tab.url+"NavClick", tab);
-          Events.app.redirectTo(tab.url);
+          this.fireEvent("NavClick", tab);
         }
       }
     }
@@ -50,13 +49,6 @@ Ext.define('Events.view.EventNav', {
 
   initialize: function() {
     var v = this;
-
-    Events.app.on('eventSaved', function(e) {
-      v.changeMyEventsBadge(1);
-    });
-    Events.app.on('eventRemoved', function(e) {
-      v.changeMyEventsBadge(-1);
-    });
 
     var mine = Ext.getStore('MyEvents');
     if (mine.isLoaded) {

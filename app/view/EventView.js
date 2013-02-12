@@ -1,6 +1,7 @@
 Ext.define('Events.view.EventView', {
   extend: 'Ext.Panel',
   alias: 'widget.eventview',
+  requires: ['Events.util.Helper'],
 
   config: {
     layout: { type: 'card' },
@@ -19,12 +20,12 @@ Ext.define('Events.view.EventView', {
             "<img src='resources/images/dollar.png' class='costIcon' /> {[this.formatCost(values.cost)]}",
           "</tpl>",
         "</p>",
-        "<p class='eventTimes subtitle'>{[Events.Util.getDateTimeRange(values.start, values.end)]}</p>",
+        "<p class='eventTimes subtitle'>{[Helper.getDateTimeRange(values.start, values.end)]}</p>",
         "<tpl if='location'>",
-          "<p class='eventLocation subtitle'>Location: {[Events.Util.escapeHtmlEntities(values.location)]}</p>",
+          "<p class='eventLocation subtitle'>Location: {[Helper.escapeHtmlEntities(values.location)]}</p>",
         "</tpl>",
         "<tpl if='address'>",
-          "<p class='eventAddress subtitle'><a href='maps:q={[Events.Util.escapeHtmlEntities(values.address)]}'>{[Events.Util.escapeHtmlEntities(values.address)]}</a></p>",
+          "<p class='eventAddress subtitle'><a href='maps:q={[Helper.escapeHtmlEntities(values.address)]}'>{[Helper.escapeHtmlEntities(values.address)]}</a></p>",
         "</tpl>",
         "<p class='eventMeta subtitle'>",
           "<tpl if='category'>",
@@ -47,7 +48,7 @@ Ext.define('Events.view.EventView', {
     listeners: {
       swipe: {
         fn: function(evt, el){
-          if (evt.direction == 'right' && !Events.Util.getBackButton().getHidden()) {
+          if (evt.direction == 'right' && !Helper.getBackButton().getHidden()) {
             history.back();
           }
         },

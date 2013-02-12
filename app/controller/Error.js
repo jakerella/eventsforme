@@ -1,5 +1,6 @@
 Ext.define('Events.controller.Error', {
   extend: 'Ext.app.Controller',
+  requires: ['Events.util.Helper'],
 
   config: {
     routes: {
@@ -12,18 +13,43 @@ Ext.define('Events.controller.Error', {
     }
   },
 
+  init: function() {
+    var c = this;
+    Ext.getStore('LocalEvents').setListeners({
+      AjaxError: function(r) {
+        if (r.status) {
+          if (r.status > 499) {
+            c.showServerError();
+          } else if (r.status == 404) {
+            c.showServerError(500, r.text); // for ajax requests, a 404 is bad, and is really a 500
+          } else if (r.status > 399) {
+            c.showOtherError(r.status, r.text);
+          }
+        } else {
+          // Generic handler
+          c.showServerError();
+        }
+      }
+    });
+  },
+
+  handleAjaxError: function(status, response, hash) {
+
+  },
+
   showNotFound: function(hash) {
-    if (Events.app.routeAliases[hash]) {
-      console.log("Redirecting alias '"+hash+"' -> '"+Events.app.routeAliases[hash]+"'");
-      Events.app.redirectTo(Events.app.routeAliases[hash]);
+    var app = this.getApplication();
+    if (app.routeAliases[hash]) {
+      console.log("Redirecting alias '"+hash+"' -> '"+app.routeAliases[hash]+"'");
+      app.redirectTo(app.routeAliases[hash]);
       return;
     }
 
     console.warn("Uh oh, didn't find that route", hash);
 
-    Events.Util.setActiveTab(null);
+    Helper.setActiveTab(null);
 
-    Events.Util.addView({
+    Helper.addView({
       xtype: "errorview",
       title: 'Uh oh...',
       hash: 'error',
@@ -31,15 +57,15 @@ Ext.define('Events.controller.Error', {
         'code': 404,
         'hash': hash
       }
-    });
+    }, app);
   },
 
   showOtherError: function(code, msg) {
     code = (code)?code:401;
-    
-    Events.Util.setActiveTab(null);
 
-    Events.Util.addView({
+    Helper.setActiveTab(null);
+
+    Helper.addView({
       xtype: "errorview",
       title: 'Uh oh...',
       hash: 'error',
@@ -47,15 +73,15 @@ Ext.define('Events.controller.Error', {
         'code': code,
         'msg': msg
       }
-    });
+    }, this.getApplication());
   },
 
   showServerError: function(code, msg) {
     code = (code)?code:500;
-    
-    Events.Util.setActiveTab(null);
 
-    Events.Util.addView({
+    Helper.setActiveTab(null);
+
+    Helper.addView({
       xtype: "errorview",
       title: 'Uh oh...',
       hash: 'error',
@@ -63,7 +89,7 @@ Ext.define('Events.controller.Error', {
         'code': code,
         'detail': msg
       }
-    });
+    }, this.getApplication());
   }
 
 });

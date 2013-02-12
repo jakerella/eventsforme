@@ -1,2 +1,5 @@
 events.sublime-project
 events.sublime-workspace
+resources/css/app.css
+build/*
+archive/*

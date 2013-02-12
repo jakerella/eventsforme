@@ -16,7 +16,7 @@
      * This value is needed when build to resolve your application's dependencies if it requires server-side resources
      * that are not accessible via file system protocol.
      */
-    "url": null,
+    "url": "http://test.eventsfor.me",
 
     /**
      * List of all JavaScript assets in the right execution order.
@@ -36,15 +36,12 @@
      */
     "js": [
         {
-            "path": "http://maps.google.com/maps/api/js?key=AIzaSyAcriS9XJQ1e-LRixsdEZ4OmahIbG8Xmqw&sensor=true"
-        },
-        {
             "path": "touch/sencha-touch.js"
         },
         {
             "path": "app.js",
             "bundle": true,  /* Indicates that all class dependencies are concatenated into this file when build */
-            "update": "delta"
+            "update": "full"
         }
     ],
 
@@ -67,15 +64,15 @@
     "css": [
         {
             "path": "resources/css/theme.css",
-            "update": "delta"
+            "update": "full"
         },
         {
             "path": "vendor/Ux/layout/Accordion.css",
-            "update": "delta"
+            "update": "full"
         },
         {
-            "path": "resources/css/app.css",
-            "update": "delta"
+            "path": "resources/css/events.css",
+            "update": "full"
         }
     ],
 
@@ -107,14 +104,18 @@
     "resources": [
         "resources/images",
         "resources/icons",
-        "resources/startup"
+        "resources/startup",
+        "data"
     ],
 
     /**
      * File / directory name matchers to ignore when copying to the builds, must be valid regular expressions
      */
     "ignore": [
-        "\.svn$"
+        "\.svn$",
+        "\.git$",
+        "\.gitignore$",
+        "^events.sublime.+"
     ],
 
     /**

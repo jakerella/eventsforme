@@ -1,5 +1,7 @@
 Ext.define('Events.store.SearchEvents', {
   extend: 'Ext.data.Store',
+  requires: ['Events.util.Helper', 'Ext.data.proxy.Ajax'],
+  
   config: {
     model: 'Events.model.Event',
     
@@ -11,7 +13,10 @@ Ext.define('Events.store.SearchEvents', {
         rootProperty: "results"
       },
       listeners: {
-        exception: Events.Util.handleAjaxException
+        exception: function(p, r, op) {
+          console.warn("Ajax exception: ", p, r, op);
+          Ext.getStore('LocalEvents').fireEvent("AjaxError", {status: r.status, text: r.responseText});
+        }
       }
     },
     sorters: [
@@ -21,8 +26,8 @@ Ext.define('Events.store.SearchEvents', {
       }
     ],
     listeners: {
-      beforeload: function() { Events.Util.setLoading(true); },
-      load: function() { Events.Util.setLoading(false); }
+      beforeload: function() { Helper.setLoading(true); },
+      load: function() { Helper.setLoading(false); }
     }
   }
 });

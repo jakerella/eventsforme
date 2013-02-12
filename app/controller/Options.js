@@ -1,6 +1,6 @@
 Ext.define('Events.controller.Options', {
   extend: 'Ext.app.Controller',
-  requires: ['Events.model.Option'],
+  requires: ['Events.util.Helper', 'Events.model.Option'],
 
   config: {
     routes: {
@@ -9,12 +9,12 @@ Ext.define('Events.controller.Options', {
   },
 
   showOptions: function() {
-    Events.Util.setActiveTab('options');
+    Helper.setActiveTab('options');
 
     var s = Ext.getStore('MyOptions');
     console.log("showing options view with store: ", s);
 
-    Events.Util.addView({
+    Helper.addView({
       xtype: 'eventoptions',
       id: 'options-form',
       hash: 'options',
@@ -24,7 +24,7 @@ Ext.define('Events.controller.Options', {
         'saveOptions': this.saveOptions,
         scope: this
       }
-    });
+    }, this.getApplication());
   },
 
   saveOptions: function(values) {
@@ -52,6 +52,6 @@ Ext.define('Events.controller.Options', {
     }
 
     Ext.Msg.alert('', "All saved. Thanks!");
-  },
+  }
 
 });

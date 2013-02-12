@@ -1,6 +1,6 @@
 Ext.define('Events.controller.Static', {
   extend: 'Ext.app.Controller',
-  requires: ['Ux.layout.Accordion'],
+  requires: ['Events.util.Helper', 'Ext.Panel'],
 
   config: {
     routes: {
@@ -10,14 +10,14 @@ Ext.define('Events.controller.Static', {
   },
 
   showAbout: function() {
-    Events.Util.setActiveTab('about');
+    Helper.setActiveTab('about');
 
-    var v = Events.Util.addView({
+    var v = Helper.addView({
       xtype: 'aboutview',
       id: 'about-view',
       title: 'EventsFor.Me',
       hash: 'about'
-    });
+    }, this.getApplication());
 
     v.getItems().each(function(item, i) {
       v.layout.collapse(item);
@@ -26,9 +26,9 @@ Ext.define('Events.controller.Static', {
   },
 
   showDonateThanks: function() {
-    Events.Util.setActiveTab('about');
+    Helper.setActiveTab('about');
 
-    Events.Util.addView({
+    Helper.addView({
       xtype: 'panel',
       id: 'donate-view',
       title: 'Hey, Thanks!',
@@ -37,7 +37,7 @@ Ext.define('Events.controller.Static', {
       html: 
         "<p>Hey! Thanks for donating to the EventsFor.Me app!</p>"+
         "<p>We really appreciate your gift, it will go towards hosting and - to be honest - beer. If you are interested in helping us make EventsFor.Me better just <a href='https://github.com/jakerella/eventsforme/issues'>visit us on github</a> and submit a feature request or bug report!</p>"
-    });
+    }, this.getApplication());
   }
 
 });

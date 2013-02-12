@@ -1,6 +1,6 @@
 Ext.define('Events.controller.Event', {
   extend: 'Ext.app.Controller',
-  requires: ['Events.model.Event', 'Ext.device.Geolocation'],
+  requires: ['Events.util.Helper', 'Events.model.Event', 'Ext.device.Geolocation'],
 
   config: {
     id: 'eventcontroller',
@@ -43,8 +43,9 @@ Ext.define('Events.controller.Event', {
     refs: {
       saveButton: '#save-event',
       removeButton: '#remove-event',
-      mapButton: '#map-events'
-
+      mapButton: '#map-events',
+      eventList: 'eventlist',
+      eventMap: 'eventmap'
     },
     control: {
       saveButton: {
@@ -55,12 +56,15 @@ Ext.define('Events.controller.Event', {
       },
       mapButton: {
         'showMap': 'handleShowMapClick'
+      },
+      eventList: {
+        'ShowEventView': 'handleShowEvent'
+      },
+      eventMap: {
+        'ShowEventView': 'handleShowEvent'
       }
     }
   },
-
-  // Statics & Constants
-  defParams: {'terms': '', 'loc': '', 'time': Events.app.defDays, 'dist': Events.app.defDist},
 
   init: function() {
     Ext.getStore("MyEvents").load({
@@ -75,9 +79,13 @@ Ext.define('Events.controller.Event', {
 
   serializeParams: function(params) {
     params = (params)?params:{};
-    var p = Ext.merge(Ext.clone(this.defParams), params);
+
+    console.log('serializing params with defaults: ', Helper.getDefParams());
+
+    var p = Ext.merge(Helper.getDefParams(), params);
     return p.terms+'|'+p.loc+'|'+p.time+'|'+p.dist;
   },
+
   unserializeParams: function(params) {
     params = (params)?params:'';
     var p = params.split('|');
@@ -86,26 +94,30 @@ Ext.define('Events.controller.Event', {
         'terms': p[0],
         'loc': p[1],
         'time': p[2],
-        'dist': p[3],
+        'dist': p[3]
       };
     } else if (p.length == 2) {
       p = {
         'loc': p[0],
-        'dist': p[1],
+        'dist': p[1]
       };
     } else {
       p = {};
     }
-    p = Ext.merge(Ext.clone(this.defParams), p);
+    p = Ext.merge(Helper.getDefParams(), p);
     return p;
   },
 
 
   // ------------- VIEW, SAVE, REMOVE SINGLE EVENT ------------- //
 
+  handleShowEvent: function(id) {
+    this.getApplication().redirectTo('view/'+id);
+  },
+
   getEventAndShow: function(id) {
     if (!id) {
-      Events.app.getController('Error').showOtherError(401, "Sorry, but I wasn't able to load that event, can you try again?");
+      this.getApplication().getController('Error').showOtherError(401, "Sorry, but I wasn't able to load that event, can you try again?");
       return;
     }
 
@@ -138,7 +150,7 @@ Ext.define('Events.controller.Event', {
                   if (s && r && r[0]) {
                     c.showEvent(r[0]);
                   } else if (s) {
-                    Events.app.getController('Error').showOtherError(401, "Sorry, but I wasn't able to load that event. It may have been deleted. Please select another event!");
+                    this.getApplication().getController('Error').showOtherError(401, "Sorry, but I wasn't able to load that event. It may have been deleted. Please select another event!");
                   }
                 }
               });
@@ -152,20 +164,20 @@ Ext.define('Events.controller.Event', {
   showEvent: function(event) {
     console.log("Showing event: ", event);
           
-    Events.Util.setActiveTab(null);
+    Helper.setActiveTab(null);
 
-    Events.Util.addView({
+    Helper.addView({
       xtype: 'eventview',
       id: 'view-event-'+event.get('id'),
       title: 'View Event',
       hash: 'view/'+event.get('id'),
       record: event
-    });
+    }, this.getApplication());
 
     if (!event.get('saved')) {
-      Events.Util.getSaveButton().setHidden(false);
+      Helper.getSaveButton().setHidden(false);
     } else {
-      Events.Util.getRemoveButton().setHidden(false);
+      Helper.getRemoveButton().setHidden(false);
     }
   },
 
@@ -179,8 +191,8 @@ Ext.define('Events.controller.Event', {
       e.set('saved', true);
       e.save({
         success: function() {
-          Events.Util.getSaveButton().setHidden(true);
-          Events.Util.getRemoveButton().setHidden(false);
+          Helper.getSaveButton().setHidden(true);
+          Helper.getRemoveButton().setHidden(false);
 
           var mine = Ext.getStore("MyEvents");
           if (mine.isLoaded()) {
@@ -188,7 +200,7 @@ Ext.define('Events.controller.Event', {
             mine.sync();
           }
 
-          Events.app.fireEvent("eventSaved", e);
+          Helper.getNavBar().changeMyEventsBadge(1);
         },
         failure: function(r, op) {
           console.warn(op);
@@ -210,8 +222,8 @@ Ext.define('Events.controller.Event', {
         callback: function() {
           e.erase({
             success: function() {
-              Events.Util.getSaveButton().setHidden(false);
-              Events.Util.getRemoveButton().setHidden(true);
+              Helper.getSaveButton().setHidden(false);
+              Helper.getRemoveButton().setHidden(true);
               
               var mine = Ext.getStore("MyEvents");
               if (mine.isLoaded()) {
@@ -219,7 +231,7 @@ Ext.define('Events.controller.Event', {
                 mine.sync();
               }
 
-              Events.app.fireEvent("eventRemoved", e);
+              Helper.getNavBar().changeMyEventsBadge(-1);
             },
             failure: function(r, op) {
               console.warn(op);
@@ -235,9 +247,9 @@ Ext.define('Events.controller.Event', {
   // ------------- SEARCH EVENTS ------------- //
 
   showSearchForm: function() {
-    Events.Util.setActiveTab('search');
+    Helper.setActiveTab('search');
 
-    Events.Util.addView({
+    Helper.addView({
       xtype: 'eventsearch',
       id: 'search-form',
       hash: 'search',
@@ -246,7 +258,7 @@ Ext.define('Events.controller.Event', {
         'searchEvents': this.doSearch,
         scope: this
       }
-    });
+    }, this.getApplication());
   },
 
   doSearch: function(values) {
@@ -255,7 +267,7 @@ Ext.define('Events.controller.Event', {
     values = (values)?values:{};
     values.terms = (values.terms)?values.terms:'';
     values.loc = (values.loc)?values.loc:'';
-    values.dist = (values.dist)?values.dist:''+Events.defDist;
+    values.dist = (values.dist)?values.dist:''+Helper.defDist;
 
     values.terms = values.terms.replace(/[^a-zA-Z0-9\-\,\.\!\(\)\@\$\?\:\'\" ]/g, '');
     values.loc = values.loc.replace(/[^a-zA-Z0-9\-\,\'\. ]/g, '');
@@ -269,38 +281,38 @@ Ext.define('Events.controller.Event', {
       return;
     }
 
-    Events.app.redirectTo('search-results/'+this.serializeParams(values)+'/'+(new Date()).getTime());
+    this.getApplication().redirectTo('search-results/'+this.serializeParams(values)+'/'+(new Date()).getTime());
   },
 
   searchResults: function(params, ts) {
-    Events.Util.setActiveTab('search');
+    Helper.setActiveTab('search');
     
     params = this.unserializeParams(params);
     ts = (ts)?ts:(new Date()).getTime();
 
     var s = Ext.getStore("SearchEvents");
-    if (!s.isLoaded() || !Events.Util.isEqual(s.searchParams, params)) {
+    if (!s.isLoaded() || !Helper.isEqual(s.searchParams, params)) {
       s.searchParams = params;
       s.load({
         'params': params,
         callback: function(r, op) {
           if (r.length) {
-            Events.Util.getMapButton().setHidden(false);
+            Helper.getMapButton().setHidden(false);
           }
         }
       });
     }
 
-    Events.Util.addView({
+    Helper.addView({
       xtype: 'eventlist',
       id: 'search-results-'+ts,
       title: 'Event Search Results',
       hash: 'search-results/'+this.serializeParams(params)+'/'+ts,
       store: s
-    });
+    }, this.getApplication());
 
     // wait for view to be added to turn on the map button
-    Events.Util.getMapButton().setHidden(!s.getAllCount());
+    Helper.getMapButton().setHidden(!s.getAllCount());
   },
 
   // ------------- LOCAL EVENTS ------------- //
@@ -314,18 +326,18 @@ Ext.define('Events.controller.Event', {
         },
         failure: function(e) {
           console.warn("Unable to get Geolocation", e);
-          Events.app.redirectTo('search');
+          this.getApplication().redirectTo('search');
         }
       });
     } else {
-      Events.app.redirectTo('search');
+      this.getApplication().redirectTo('search');
     }
   },
 
   showLocalEvents: function(loc) {
     console.log('showing local events', loc);
 
-    Events.Util.setActiveTab('local');
+    Helper.setActiveTab('local');
 
     var p = {};
     if (loc && loc.coords) {
@@ -336,49 +348,49 @@ Ext.define('Events.controller.Event', {
     p = this.unserializeParams(this.serializeParams(p)); // will add in defaults & ensure proper format
 
     var s = Ext.getStore("LocalEvents");
-    if (!s.isLoaded() || !Events.Util.isEqual(s.searchParams, p)) {
+    if (!s.isLoaded() || !Helper.isEqual(s.searchParams, p)) {
       s.searchParams = p;
       s.load({
         'params': p,
         callback: function(r, op) {
           if (r.length) {
-            Events.Util.getMapButton().setHidden(false);
+            Helper.getMapButton().setHidden(false);
           }
         }
       });
     }
 
-    Events.Util.addView({
+    Helper.addView({
       xtype: 'eventlist',
       id: 'local-events',
       title: 'Events Near You',
       hash: 'local',
       store: s
-    });
+    }, this.getApplication());
 
     // wait for view to be added to turn on the map button
-    Events.Util.getMapButton().setHidden(!s.getAllCount());
+    Helper.getMapButton().setHidden(!s.getAllCount());
   },
 
 
   // ------------- STORED EVENTS ------------- //
 
   showMyEvents: function() {
-    Events.Util.setActiveTab('my-events');
+    Helper.setActiveTab('my-events');
 
     var s = Ext.getStore("MyEvents").load();
 
-    Events.Util.addView({
+    Helper.addView({
       xtype: 'eventlist',
       id: 'my-events',
       hash: 'my-events',
       title: 'My Events',
       store: s
-    });
+    }, this.getApplication());
 
     // wait for store to be loaded and view added to turn on the map button
     setTimeout(function() {
-      Events.Util.getMapButton().setHidden(!s.getAllCount());
+      Helper.getMapButton().setHidden(!s.getAllCount());
     }, 200);
   },
 
@@ -386,7 +398,7 @@ Ext.define('Events.controller.Event', {
   // ------------- EVENT MAPPING ------------- //
 
   handleShowMapClick: function(store) {
-    Events.app.redirectTo(this.getMapHash(store, store.searchParams));
+    this.getApplication().redirectTo(this.getMapHash(store, store.searchParams));
   },
 
   showEventMap: function(sId, params) {
@@ -407,7 +419,7 @@ Ext.define('Events.controller.Event', {
 
         if (store.getStoreId() == 'SearchEvents' && !params.loc) {
           Ext.Msg.alert('', "Sorry, but you'll need to specify a location to search events!", function() {
-            Events.app.redirectTo('search');
+            this.getApplication().redirectTo('search');
           });
           return;
         }
@@ -420,26 +432,26 @@ Ext.define('Events.controller.Event', {
         });
       }
     } else {
-      Events.app.getController('Error').showOtherError(500, "Sorry, but I wasn't able to load the events for this map, can you try again?");
+      this.getApplication().getController('Error').showOtherError(500, "Sorry, but I wasn't able to load the events for this map, can you try again?");
     }
   },
 
   doShowMap: function(s) {
     if (s.getStoreId() == 'MyEvents') {
-      Events.Util.setActiveTab('my-events');
+      Helper.setActiveTab('my-events');
     } else if (s.searchParams && s.searchParams.terms && s.searchParams.terms.length) {
-      Events.Util.setActiveTab('search');
+      Helper.setActiveTab('search');
     } else {
-      Events.Util.setActiveTab('local');
+      Helper.setActiveTab('local');
     }
 
-    Events.Util.addView({
+    Helper.addView({
       xtype: 'eventmap',
       id: 'event-map',
       hash: this.getMapHash(s, s.searchParams),
       title: 'Event Map',
       store: s
-    });
+    }, this.getApplication());
   },
 
   getMapHash: function(s, p) {

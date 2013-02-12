@@ -1,6 +1,6 @@
 Ext.define('Events.view.EventSearch', {
   extend: 'Ext.form.Panel',
-  requires: ['Ext.form.FieldSet', 'Ext.field.Search', 'Ext.field.Select'],
+  requires: ['Events.util.Helper', 'Ext.field.Search', 'Ext.field.Select', 'Ext.Button', 'Ext.form.FieldSet'],
   alias: 'widget.eventsearch',
 
   config: {
@@ -41,7 +41,7 @@ Ext.define('Events.view.EventSearch', {
       xtype: 'selectfield',
       name: 'time',
       label: 'Time Range',
-      value: Events.app.defDays,
+      value: Helper.config.defDays,
       options: [
         {text: 'Today',  value: '1'},
         {text: 'Next 3 Days', value: '3'},
@@ -55,7 +55,7 @@ Ext.define('Events.view.EventSearch', {
       xtype: 'selectfield',
       name: 'dist',
       label: 'Distance',
-      value: Events.app.defDist,
+      value: Helper.config.defDist,
       options: [
         {text: '5 miles',  value: '5'},
         {text: '10 miles', value: '10'},

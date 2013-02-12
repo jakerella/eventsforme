@@ -1,5 +1,6 @@
 Ext.define('Events.model.Option', {
   extend: 'Ext.data.Model',
+  requires: ['Ext.data.proxy.LocalStorage'],
 
   config: {
     idProperty: 'id',

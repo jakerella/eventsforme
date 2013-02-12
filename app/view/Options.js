@@ -1,6 +1,6 @@
 Ext.define('Events.view.Options', {
   extend: 'Ext.form.Panel',
-  requires: ['Ext.form.FieldSet'],
+  requires: ['Ext.field.Checkbox', 'Ext.field.Text', 'Ext.Button', 'Ext.form.FieldSet'],
   alias: 'widget.eventoptions',
 
   config: {

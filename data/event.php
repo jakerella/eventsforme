@@ -45,7 +45,7 @@ set_error_handler('handleError');
 
 // Handle incoming requests
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-  
+
   // Are they looking for a particular event?
   if (isset($_GET['id']) && strlen($_GET['id'])) {
     App::findEvent($_GET);

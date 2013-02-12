@@ -59,8 +59,9 @@ Ext.define('Events.view.EventMap', {
     });
     e.gmapMarker = marker;
 
+    var v = this;
     google.maps.event.addListener(marker, 'click', function() {
-      Events.app.redirectTo('view/'+e.get('id'));
+      v.fireEvent('ShowEventView', e.get('id'));
     });
 
     return {'Marker': marker, 'LatLng': p};
