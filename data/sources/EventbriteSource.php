@@ -6,9 +6,6 @@ class EventbriteSource extends EventSource {
 
   const API_KEY = "UKGFOYQK7HNJIY22Z6";
 
-  // must display: event title, event date, event time, event country, event city, event state, and any publicly published information about that event
-  // must link to EB event
-
   public $name = 'Eventbrite';
   public $site = 'http://www.eventbrite.com';
   public $defaultCategory = 'Event';
@@ -205,10 +202,17 @@ class EventbriteSource extends EventSource {
       }
     }
 
+    $descr = "";
+    // Per EB terms, must display: event city, state, and country, so put it in display
+    if (isset($result->venue)) {
+      $descr .= "<p style='font-size:0.9em;color:#444;'>".$result->venue->city.", ".$result->venue->region.", ".$result->venue->country."</p>";
+    }
+    $descr .= preg_replace("/\\r\\n/", '', $result->description);
+
     $event = array(
       'id' => $this->getGUID($result->id, $start),
       'title' => $result->title,
-      'description' => preg_replace("/\\r\\n/", '', $result->description),
+      'description' => $descr,
       'category' => ((isset($result->category) && strlen($result->category))?$result->category:$this->defaultCategory),
       'source' => $this->name,
       'link' => $result->url,

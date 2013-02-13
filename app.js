@@ -8,12 +8,12 @@ Ext.Loader.setPath({
 
 
 // TODO ITEMS:
-//   Add other event sources
 //   List sources used
 //   Enable/Disable sources used
-//   Add analytics
 //   Add event to My Events from form
 //   Export all saved events as iCal
+//   Paging on search
+//   Add other event sources
 //   Suggest a new source
 //   Suggest event for publication (from self-created one)
 //   New styling/theme
@@ -33,8 +33,8 @@ Ext.application({
     'EventList', 'EventView', 'EventSearch', 'EventMap', // For viewing/searhcing events
     'ErrorView' // Other
   ],
-  models: ['Event', 'Option'],
-  stores: ['LocalEvents', 'SearchEvents', 'MyEvents', 'MyOptions'],
+  models: ['Event', 'Option', 'Source'],
+  stores: ['LocalEvents', 'SearchEvents', 'MyEvents', 'MyOptions', 'Sources'],
 
   icon: {
     '57': 'resources/icons/Icon.png',

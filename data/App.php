@@ -25,16 +25,6 @@ class App {
   // Various static members
   private static $cache = array();
   private static $logger;
-  public static $STATUS_CODES = array(
-    400 => "Bad Request - Please view documentation for proper request syntax",
-    401 => "Unauthorized - You are not authorized to access this resource",
-    403 => "Forbidden - Access to this resource is forbidden",
-    404 => "Not Found - That resource is not available",
-    405 => "Method Not Allowed - The method used is not allowed for this resource",
-    500 => "Server Error - Please contact the site administrator",
-    501 => "Not Implemented - Please view documentation for available resources and actions",
-    503 => "Unavailable - This system is currently unavailable"
-  );
 
 
   // ------------------- Event Source Definition --------------------- //
@@ -42,9 +32,8 @@ class App {
   public static $sources = array(
     'mu' => 'MeetupSource',
     'eb' => 'EventbriteSource'
-    //'yh' => 'YahooSource' // no idea why, but this does not work in production (empty response)
+    // 'yh' => 'YahooSource', // no idea why, but this does not work in production (empty response)
     
-    // Eventful - http://api.eventful.com/docs/events/search
     // Google Places - https://developers.google.com/places/documentation/details
     // Zvents - http://corporate.zvents.com/products/mobile_api.html
     // Goodreads - http://www.goodreads.com/api#events.list ... not sure about this one...
@@ -53,6 +42,20 @@ class App {
 
 
   // -------------------- Handle Incoming Request --------------------- //
+
+  public static function getAllSources() {
+    $sources = array();
+    foreach (self::$sources as $prefix => $class) {
+      self::loadSource($class);
+      $source = new $class(self::$logger);
+      $sources[] = array(
+        'id' => $source->getGUIDPrefix(),
+        'name' => $source->name,
+        'url' => $source->site
+      );
+    }
+    return $sources;
+  }
 
   public static function findEvents(array $params = null) {
     $params = array_merge(
@@ -109,8 +112,8 @@ class App {
       $resultCache = self::getCache(self::SEARCH_CACHE)->getById($sid);
       self::log("Using cached search results for ".$sid);
       
-      // respond with our results
-      self::respond($resultCache->events);
+      // return our cached results
+      return $resultCache->events;
 
     } catch (NotFoundException $nfe) {
       // let these go, just means we need search for these fresh
@@ -168,8 +171,7 @@ class App {
       self::log($ce);
     }
 
-    // respond with our results
-    self::respond($events);
+    return $events;
   }
 
   public static function sortEvents($a, $b) {
@@ -202,7 +204,7 @@ class App {
       }
     }
 
-    self::respond($event);
+    return $event;
   }
 
 
@@ -353,74 +355,6 @@ class App {
     }
 
     return $coor;
-  }
-
-
-  // -------------------- Response & Error Handling ------------------ //
-  
-  /**
-   * Determines the protocol used by this client
-   * 
-   * @return String
-   */
-  public static function getProtocol() {
-    $protocol = "HTTP/1.1";
-    if(isset($_SERVER['SERVER_PROTOCOL'])) {
-      $protocol = $_SERVER['SERVER_PROTOCOL'];
-    }
-    return $protocol;
-  }
-  
-  /**
-   * Sends a response to the client. Used primarily for API calls
-   * 
-   * @param Object $responseBody The body to send back, will be json encoded
-   * @return void
-   */
-  public static function respond($results, $code = 200, $statusMsg = "Success") {
-    $protocol = self::getProtocol();
-    
-    if (!headers_sent()) {
-      header("$protocol $code $statusMsg");
-    } else {
-      echo "; ";
-    }
-    
-    if ($code == 200) {
-      header("Content-Type: application/json");
-      
-      $resp = array(
-        'success' => true,
-        'results' => $results
-      );
-
-      echo json_encode($resp);
-
-    } else {
-      echo $results;
-    }
-    exit;
-  }
-  
-  /**
-   * Sets an error header and response body based on the message or exception
-   * 
-   * @param String | Exception $error The error message or exception
-   * @param Int $code The HTTP status code to use
-   * @return void
-   */
-  public static function respondError($msgOrException, $code = null) {
-    $protocol = self::getProtocol();
-    
-    $msg = $msgOrException;
-    if ($msgOrException instanceof Exception) {
-      $msg = $msgOrException->getMessage();
-      $c = $msgOrException->getCode();
-      if (!$code && $c) { $code = $c; }
-    }
-    if (!$code) { $code = 500; }
-    
-    self::respond($msg, $code, ((isset(self::$STATUS_CODES[$code]))?self::$STATUS_CODES[$code]:"Error"));
   }
 
 } // End of App class

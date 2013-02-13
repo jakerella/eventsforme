@@ -49,6 +49,8 @@ Ext.define('Events.view.EventNav', {
   },
 
   initialize: function() {
+    this.callParent(arguments);
+    
     var v = this;
 
     var mine = Ext.getStore('MyEvents');
