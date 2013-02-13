@@ -18,7 +18,8 @@ Ext.define('Events.model.Event', {
       {name: 'lat', type: 'float'},
       {name: 'lng', type: 'float'},
       {name: 'tickets', type: 'boolean'},
-      {name: 'cost', type: 'float'},
+      {name: 'ticket_link', type: 'string'},
+      {name: 'cost', type: 'string'}, // allows for multiple costs (diff ticket types)
       {name: 'saved', type: 'boolean'}
     ],
 

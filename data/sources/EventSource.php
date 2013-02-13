@@ -3,6 +3,7 @@ abstract class EventSource {
 
   const DEFAULT_DAYS = 7;
   const DEFAULT_DIST = 10;
+  const DEFAULT_PAGE_SIZE = 20;
 
   public static $defaultParams = array(
     'terms'=>null, 
@@ -65,6 +66,7 @@ abstract class EventSource {
    *     'location' => string,
    *     'address' => string,
    *     'tickets' => boolean,
+   *     'ticket_link' => string,
    *     'cost' => float,
    *     'start' => 'Y-m-d H:i:s' or null,
    *     'end' => 'Y-m-d H:i:s' or null,

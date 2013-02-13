@@ -13,6 +13,7 @@ Ext.define('Events.util.Helper', {
     removeButton: null,
     mapButton: null,
     backBtn: null,
+    maxResults: 50,
     defDist: 10,
     defDays: 7
   },

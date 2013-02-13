@@ -3,3 +3,5 @@ events.sublime-workspace
 resources/css/app.css
 build/*
 archive/*
+test-*.php
+*-test.php

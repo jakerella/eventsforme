@@ -6,7 +6,9 @@ require_once('sources/EventSource.php');
 class App {
   // FOR TESTING
   const TEST_CACHE = false; // set to true to use real CouchCache (only used in TEST)
+  const DISABLE_CACHE = false; // mostly for testing
   // Some constants
+  const MAX_RESULTS = 50;
   const DEFAULT_DIST = 10;
   const DEFAULT_DAYS = 7;
   const SEARCH_CACHE_TTL = 10800; // 3 hours
@@ -38,10 +40,10 @@ class App {
   // ------------------- Event Source Definition --------------------- //
   
   public static $sources = array(
-    'mu' => 'MeetupSource'
-
-    // Yahoo - http://upcoming.yahoo.com/services/api/event.search.php
-    // Eventbrite - http://developer.eventbrite.com/doc/events/event_search/
+    'mu' => 'MeetupSource',
+    'eb' => 'EventbriteSource'
+    //'yh' => 'YahooSource' // no idea why, but this does not work in production (empty response)
+    
     // Eventful - http://api.eventful.com/docs/events/search
     // Google Places - https://developers.google.com/places/documentation/details
     // Zvents - http://corporate.zvents.com/products/mobile_api.html
@@ -151,6 +153,11 @@ class App {
     unset($vagueIds);
     unset($allEvents);
 
+    // cut it down to size, after ordering by start date
+    usort($events, array('App', 'sortEvents'));
+    if (sizeof($events) > self::MAX_RESULTS) {
+      $events = array_slice($events, 0, self::MAX_RESULTS);
+    }
 
     // add new search results to cache
     try {
@@ -163,6 +170,15 @@ class App {
 
     // respond with our results
     self::respond($events);
+  }
+
+  public static function sortEvents($a, $b) {
+    if ($a['start'] > $b['start']) {
+      return 1;
+    } else if ($a['start'] < $b['start']) {
+      return -1;
+    }
+    return 0;
   }
 
 
@@ -197,7 +213,7 @@ class App {
   }
 
   private static function getCache($type) {
-    if (!self::isProd() && !self::TEST_CACHE) {
+    if ((!self::isProd() && !self::TEST_CACHE) || self::DISABLE_CACHE) {
       return (new FakeCache());
     } else {
       if (!isset(self::$cache[$type])) {

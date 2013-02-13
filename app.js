@@ -6,6 +6,22 @@ Ext.Loader.setPath({
 });
 //</debug>
 
+
+// TODO ITEMS:
+//   Add other event sources
+//   List sources used
+//   Enable/Disable sources used
+//   Add analytics
+//   Add event to My Events from form
+//   Export all saved events as iCal
+//   Suggest a new source
+//   Suggest event for publication (from self-created one)
+//   New styling/theme
+//   Add sharing info
+//   Allow single event retrieval from cache
+//   Region-specific sources (metro areas, like LA Times event listings)
+
+
 Ext.application({
   name: 'Events',
 
@@ -40,6 +56,14 @@ Ext.application({
     // Destroy the #appLoadingIndicator element
     Ext.fly('appLoadingIndicator').destroy();
     
+    // Sencha Touch doesn't handle non-webkit browsers very well.
+    if (!Ext.browser.is.WebKit) {
+      Ext.Msg.alert('', "It looks like you are using a "+Ext.browser.name+" browser; unfortunately, this browser does not use the \"webkit\" rendering engine. What that means is that most of the elements of this mobile web app won't look right or work for you!<br /><br />You may want to try a different browser.");
+    }
+    if (!Ext.feature.has.LocalStorage) {
+      Ext.Msg.alert('', "It looks like the browser you are using does not allow for local storage, which is how we save events for you to view later!<br /><br />You may want to try to update your browser, or use a different one.");
+    }
+
     // Add our static components
     Ext.Viewport.add([
       {
@@ -166,24 +190,6 @@ Ext.application({
     'mine': 'my-events',
     'map': 'show-map/MyEvents'
   }
-
-
-  // TODO ITEMS:
-  //   Add other event sources
-  //   List sources used
-  //   Enable/Disable sources used
-  //   Add notice (and error page?) for users not on webkit browser
-  //   Add analytics
-  //   Add event to My Events from form
-  //   Export all saved events as iCal
-  //   Suggest a new source
-  //   Suggest event for publication (from self-created one)
-  //   New styling/theme
-  //   Add sharing info
-  //   Allow single event retrieval from cache
-  //   Region-specific sources (metro areas, like LA Times event listings)
-  //   
-  //   Google has disabled use of the Maps API for this application. See the Terms of Service for more information: http://www.google.com/intl/en-US_US/help/terms_maps.html.
 
 });
 

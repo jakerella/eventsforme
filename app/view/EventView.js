@@ -14,7 +14,17 @@ Ext.define('Events.view.EventView', {
         "</h3>",
         "<p class='eventTickets'>",
           "<tpl if='tickets'>",
-            "<img src='resources/images/ticket.png' class='ticketIcon' /> required ",
+            "<img src='resources/images/ticket.png' class='ticketIcon' /> ",
+            "<tpl if='ticket_link'>",
+              "<a href='{ticket_link}' class='ticketLink' target='_blank'>required</a>",
+            "<tpl else>",
+              "required ",
+            "</tpl>",
+          "<tpl else>",
+            "<tpl if='ticket_link'>",
+              "<img src='resources/images/ticket.png' class='ticketIcon' /> ",
+              "<a href='{ticket_link}' class='ticketLink' target='_blank'>tickets</a>",
+            "</tpl>",
           "</tpl>",
           "<tpl if='cost'>",
             "<img src='resources/images/dollar.png' class='costIcon' /> {[this.formatCost(values.cost)]}",
@@ -39,8 +49,8 @@ Ext.define('Events.view.EventView', {
       "</div>",
       {
         formatCost: function(cost) {
-          cost = Number(cost);
-          return (cost)?cost.toFixed(2):0;
+          var nCost = Number(cost);
+          return (nCost)?nCost.toFixed(2):cost;
         }
       }
     ),

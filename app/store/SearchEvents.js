@@ -27,7 +27,12 @@ Ext.define('Events.store.SearchEvents', {
     ],
     listeners: {
       beforeload: function() { Helper.setLoading(true); },
-      load: function() { Helper.setLoading(false); }
+      load: function() {
+        Helper.setLoading(false);
+        if (this.getAllCount() >= Helper.config.maxResults) {
+          Ext.Msg.alert('', "There are a lot of results here, you may want to narrow your search!");
+        }
+      }
     }
   }
 });

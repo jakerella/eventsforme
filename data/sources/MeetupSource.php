@@ -32,7 +32,7 @@ class MeetupSource extends EventSource {
            "&lon={$params['lng']}".
            "&radius={$params['dist']}".
            "&status=upcoming".
-           "&page=40".
+           "&page=".self::DEFAULT_PAGE_SIZE.
            "&sign=true";
 
     if ($params['terms']) {
@@ -42,6 +42,8 @@ class MeetupSource extends EventSource {
     if (isset($params['time'])) {
       $url .= "&time=,".$params['time']."d";
     }
+
+    self::log("Sending request for Meetup events to {$url}");
 
     // send the request
     $ch = curl_init();
@@ -57,14 +59,18 @@ class MeetupSource extends EventSource {
     if ($status == 200) {
       $respJson = json_decode(utf8_encode($response));
 
-      // Handle results
-      if (isset($respJson->results) && sizeof($respJson->results) > 0) {
-        foreach ($respJson->results as $result) {
-          $event = $this->processEventResult($result);
-          if ($event) {
-            array_push($events, $event);
+      if ($respJson) {
+        // Handle results
+        if (isset($respJson->results) && sizeof($respJson->results) > 0) {
+          foreach ($respJson->results as $result) {
+            $event = $this->processEventResult($result);
+            if ($event) {
+              array_push($events, $event);
+            }
           }
         }
+      } else {
+        $this->handleBadResponse(551, "Invalid Meetup response and/or JSON");
       }
       
     } else {
@@ -90,6 +96,8 @@ class MeetupSource extends EventSource {
            "&page=1".
            "&sign=true";
 
+    self::log("Sending request for single ".$this->name." event: {$url}");
+
     // send the request
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -104,7 +112,11 @@ class MeetupSource extends EventSource {
     if ($status == 200) {
       $result = json_decode(utf8_encode($response));
 
-      $event = $this->processEventResult($result);
+      if ($result) {
+        $event = $this->processEventResult($result);
+      } else {
+        $this->handleBadResponse(551, "Invalid Meetup response and/or JSON");
+      }
       
     } else {
       $this->handleBadResponse($status, $response);
@@ -123,7 +135,7 @@ class MeetupSource extends EventSource {
     if (isset($result->time) && is_numeric($result->time)) {
       $start = round($result->time / 1000);
     } else {
-      self::log("MEETUP: no (or bad) start time (".$result->time.")");
+      self::log($this->name.": no (or bad) start time (".$result->time.")");
       return null;
     }
     $end = null;
@@ -153,11 +165,13 @@ class MeetupSource extends EventSource {
     }
 
     $tickets = false;
+    $tLink = null;
     $cost = null;
     if (isset($result->fee) && isset($result->fee->amount) && $result->fee->amount > 0) {
       $cost = floatval($result->fee->amount);
       if (isset($result->fee->required) && $result->fee->required == 1) {
         $tickets = true;
+        $tLink = $result->event_url;
       }
     }
 
@@ -173,6 +187,7 @@ class MeetupSource extends EventSource {
       'start' => date('Y-m-d H:i:s', $start),
       'end' => (($end)?date('Y-m-d H:i:s', $end):null),
       'tickets' => $tickets,
+      'ticket_link' => $tLink,
       'cost' => $cost,
       'lat' => $lat,
       'lng' => $lng
@@ -182,14 +197,14 @@ class MeetupSource extends EventSource {
   }
 
   private function handleBadResponse($status = 500, $response = "") {
-    if ($status == 400) {
-      self::log("Bad request to api.meetup.com: ".$response, PEAR_LOG_WARNING);
+    if ($status > 499) {
+      self::log("Server error from ".$this->name." API: ".$response, PEAR_LOG_ERR);
     } else if ($status == 401) {
-      self::log("Bad API key for api.meetup.com: ".self::API_KEY, PEAR_LOG_ERR);
-    } else if ($status > 499) {
-      self::log("Server error from api.meetup.com: ".$response, PEAR_LOG_ERR);
+      self::log("Bad API key for ".$this->name.": ".self::API_KEY, PEAR_LOG_ERR);
+    } else if ($status == 400) {
+      self::log("Bad request to ".$this->name." API: ".$response, PEAR_LOG_WARNING);
     } else {
-      self::log("Unknown error ($status) from api.meetup.com: ".$response, PEAR_LOG_ERR);
+      self::log("Unknown error ($status) from ".$this->name." API: ".$response, PEAR_LOG_ERR);
     }
   }
 
