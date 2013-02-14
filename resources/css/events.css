@@ -9,6 +9,8 @@
 
 /* =========== Other Views ============== */
 
+#screen-title .x-title { font-size: 1em; }
+
 #optionSaveNote {
   font-size: 0.9em;
   color: #666;

@@ -63,6 +63,9 @@ class App {
       ($params)?$params:array()
     );
 
+    $params['loc'] = urldecode($params['loc']);
+    $params['terms'] = urldecode($params['terms']);
+
     self::log("Getting events using params: ".json_encode($params));
 
     // convert location to lat/lng

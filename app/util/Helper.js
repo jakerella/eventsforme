@@ -94,21 +94,21 @@ Ext.define('Events.util.Helper', {
 
   getSaveButton: function() {
     if (!this.saveButton) {
-      this.saveButton = this.getScreenTitle().getComponent('save-event');
+      this.saveButton = this.getScreenTitle().getAt(2).getComponent('save-event');
     }
     return this.saveButton;
   },
 
   getRemoveButton: function() {
     if (!this.removeButton) {
-      this.removeButton = this.getScreenTitle().getComponent('remove-event');
+      this.removeButton = this.getScreenTitle().getAt(2).getComponent('remove-event');
     }
     return this.removeButton;
   },
 
   getMapButton: function() {
     if (!this.mapButton) {
-      this.mapButton = this.getScreenTitle().getComponent('map-events');
+      this.mapButton = this.getScreenTitle().getAt(2).getComponent('map-events');
     }
     return this.mapButton;
   },
@@ -122,7 +122,7 @@ Ext.define('Events.util.Helper', {
 
   getBackButton: function() {
     if (!this.backBtn) {
-      this.backBtn = this.getScreenTitle().getComponent('nav-back');
+      this.backBtn = this.getScreenTitle().getAt(0).getComponent('nav-back');
     }
     return this.backBtn;
   },

@@ -67,7 +67,7 @@ Ext.application({
     // Add our static components
     Ext.Viewport.add([
       {
-        xtype: 'toolbar',
+        xtype: 'titlebar',
         title: 'EventsFor.Me',
         id: 'screen-title',
         docked: 'top',
@@ -75,6 +75,7 @@ Ext.application({
           {
             xtype: 'button',
             id: 'nav-back',
+            align: 'left',
             ui: 'back',
             text: 'Back',
             hidden: true,
@@ -82,9 +83,10 @@ Ext.application({
               history.back();
             }
           },
-          {xtype: 'spacer'},
+          //{xtype: 'spacer'},
           {
             xtype: 'button',
+            align: 'right',
             id: 'save-event',
             ui: 'confirm',
             text: 'Save',
@@ -93,6 +95,7 @@ Ext.application({
           },
           {
             xtype: 'button',
+            align: 'right',
             id: 'remove-event',
             ui: 'decline',
             text: 'Remove',
@@ -101,6 +104,7 @@ Ext.application({
           },
           {
             xtype: 'button',
+            align: 'right',
             id: 'map-events',
             iconCls: 'maps',
             iconMask: true,
